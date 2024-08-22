@@ -1,0 +1,29 @@
+{
+  "name": "sanity",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "lib/sanity/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "lib/sanity/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "lib/sanity/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "lib/sanity/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

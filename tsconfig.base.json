@@ -10,17 +10,30 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@limitless-angular/sanity/channels": [
+        "lib/sanity/channels/src/index.ts"
+      ],
+      "@limitless-angular/sanity/preview-kit": [
+        "lib/sanity/preview-kit/src/index.ts"
+      ],
+      "@limitless-angular/sanity/preview-kit-compat": [
+        "lib/sanity/preview-kit-compat/src/index.ts"
+      ],
+      "@limitless-angular/sanity/visual-editing": [
+        "lib/sanity/visual-editing/src/index.ts"
+      ],
+      "@limitless-angular/sanity/visual-editing-helpers": [
+        "lib/sanity/visual-editing-helpers/src/index.ts"
+      ],
+      "@limitless-angular/sanity/visual-editing-helpers/csm": [
+        "lib/sanity/visual-editing-helpers/src/csm/index.ts"
+      ]
+    }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

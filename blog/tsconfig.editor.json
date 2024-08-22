@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "tailwind.config.cjs"],
   "compilerOptions": {
     "types": ["node", "vitest/globals"]
   }
