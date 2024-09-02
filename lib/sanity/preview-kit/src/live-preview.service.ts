@@ -3,14 +3,15 @@ import {
   BehaviorSubject,
   combineLatest,
   EMPTY,
-  forkJoin,
   from,
   Observable,
-  Subject,
+  of,
 } from 'rxjs';
 import {
+  catchError,
   distinctUntilChanged,
   filter,
+  finalize,
   map,
   shareReplay,
   switchMap,
@@ -21,12 +22,7 @@ import { applyPatch } from 'mendoza';
 import { vercelStegaSplit } from '@vercel/stega';
 import { applySourceDocuments } from '@sanity/client/csm';
 import { LIVE_PREVIEW_REFRESH_INTERVAL, SANITY_CLIENT_FACTORY } from './tokens';
-import {
-  QuerySnapshot,
-  QuerySubscription,
-  QueryCacheKey,
-  QueryOptions,
-} from './types';
+import { QuerySnapshot, QueryCacheKey } from './types';
 import {
   ContentSourceMap,
   QueryParams,
@@ -35,7 +31,7 @@ import {
   InitializedClientConfig,
   type SanityClient,
 } from '@sanity/client';
-import { RevalidateService, RevalidateState } from './revalidate.service';
+import { RevalidateService } from './revalidate.service';
 import { isPlatformBrowser } from '@angular/common';
 import { UseDocumentsInUse } from '@limitless-angular/sanity/preview-kit-compat';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -53,6 +49,18 @@ function getTurboCacheKey(
 /** @internal */
 function getQueryCacheKey(query: string, params: QueryParams): QueryCacheKey {
   return `${query}-${JSON.stringify(params)}`;
+}
+
+/**
+ * Return params that are stable with deep equal as long as the key order is the same
+ *
+ * Based on https://github.com/sanity-io/visual-editing/blob/main/packages/visual-editing-helpers/src/hooks/useQueryParams.ts
+ * @internal
+ */
+function getStableQueryParams(
+  params?: undefined | null | QueryParams,
+): QueryParams {
+  return JSON.parse(JSON.stringify(params ?? {}));
 }
 
 @Injectable()
@@ -75,14 +83,11 @@ export class LivePreviewService {
     { query: string; params: QueryParams; refCount: number }
   >();
   private documentsCache!: LRUCache<string, SanityDocument>;
-  private documentsInUse = new Map<
-    string,
-    ContentSourceMap['documents'][number]
-  >();
+  private docsInUse = new Map<string, ContentSourceMap['documents'][number]>();
   private lastMutatedDocumentId$ = new BehaviorSubject<string | null>(null);
-  private subscriptions = new Subject<QuerySubscription>();
   private turboIds = new BehaviorSubject<string[]>([]);
   private isInitialized = false;
+  private warnedAboutCrossDatasetReference = false;
 
   initialize(token: string): void {
     if (this.isInitialized) {
@@ -113,10 +118,9 @@ export class LivePreviewService {
 
     if (this.isBrowser) {
       this.useDocumentsInUse.initialize(this.config);
-      this.setupSubscriptions();
       this.setupTurboUpdates();
       this.loadMissingDocuments();
-      this.setupRefreshCycle();
+      this.revalidateService.setupRevalidate(this.refreshInterval);
       this.setupSourceMapUpdates();
     }
 
@@ -131,99 +135,27 @@ export class LivePreviewService {
     }
   }
 
-  private setupSubscriptions() {
-    this.subscriptions
-      .pipe(
-        distinctUntilChanged(
-          (prev, curr) =>
-            prev.query === curr.query &&
-            JSON.stringify(prev.params) === JSON.stringify(curr.params),
-        ),
-        tap(({ query, params }) => {
-          const key = getQueryCacheKey(query, params);
-          if (!this.snapshots.has(key)) {
-            this.snapshots.set(
-              key,
-              new BehaviorSubject<QuerySnapshot<unknown>>({
-                result: null,
-                resultSourceMap: {} as ContentSourceMap,
-              }),
-            );
-          }
-        }),
-        switchMap(({ query, params }) =>
-          this.fetchAndUpdateSnapshot(query, params),
-        ),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe();
-  }
-
-  private fetchAndUpdateSnapshot(
-    query: string,
-    params: QueryParams,
-  ): Observable<void> {
-    return from(
-      this.client
-        .fetch<{
-          result: unknown;
-          resultSourceMap: ContentSourceMap;
-        }>(query, params, { filterResponse: false })
-        .then(({ result, resultSourceMap }) => {
-          const key = getQueryCacheKey(query, params);
-          const snapshot = this.snapshots.get(key);
-          if (snapshot) {
-            snapshot.next({
-              result: this.turboChargeResultIfSourceMap(
-                result,
-                resultSourceMap,
-              ),
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              resultSourceMap: resultSourceMap ?? ({} as ContentSourceMap),
-            });
-          }
-
-          return resultSourceMap;
-        }),
-    ).pipe(
-      tap((resultSourceMap) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.updateTurboIds(resultSourceMap!);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.updateDocumentsInUse(resultSourceMap!);
-      }),
-      map(() => undefined),
-    );
-  }
-
-  private refreshAllSnapshots(): Observable<void> {
-    const refreshObservables = Array.from(this.snapshots.entries())
-      .filter(([key]) => this.queryParamsCache.has(key))
-      .map(([key]) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { query, params } = this.queryParamsCache.get(key)!;
-        return this.fetchAndUpdateSnapshot(query, params);
-      });
-
-    return forkJoin(refreshObservables).pipe(map(() => undefined));
-  }
-
-  private updateTurboIds(resultSourceMap: ContentSourceMap) {
-    if (resultSourceMap?.documents?.length) {
-      const newIds = resultSourceMap.documents.map((doc) => doc._id);
-      this.turboIds.next([
-        ...new Set([...this.turboIds.getValue(), ...newIds]),
-      ]);
-    }
-  }
-
-  private updateDocumentsInUse(resultSourceMap: ContentSourceMap) {
+  private turboIdsFromSourceMap(resultSourceMap: ContentSourceMap) {
+    const nextTurboIds = new Set<string>();
+    this.docsInUse.clear();
     if (resultSourceMap?.documents?.length) {
       for (const document of resultSourceMap.documents) {
-        this.documentsInUse.set(document._id, document);
+        nextTurboIds.add(document._id);
+        this.docsInUse.set(document._id, document);
       }
 
-      this.useDocumentsInUse.updateDocumentsInUse(this.documentsInUse);
+      this.useDocumentsInUse.updateDocumentsInUse(this.docsInUse);
+    }
+
+    const prevTurboIds = this.turboIds.getValue();
+    const mergedTurboIds = Array.from(
+      new Set([...prevTurboIds, ...nextTurboIds]),
+    );
+    if (
+      JSON.stringify(mergedTurboIds.sort()) !==
+      JSON.stringify(prevTurboIds.sort())
+    ) {
+      this.turboIds.next(mergedTurboIds);
     }
   }
 
@@ -240,14 +172,22 @@ export class LivePreviewService {
       resultSourceMap,
       (sourceDocument) => {
         if (sourceDocument._projectId) {
-          console.warn(
-            'Cross dataset references are not supported yet, ignoring source document',
-            sourceDocument,
-          );
+          // @TODO Handle cross dataset references
+          if (!this.warnedAboutCrossDatasetReference) {
+            console.warn(
+              'Cross dataset references are not supported yet, ignoring source document',
+              sourceDocument,
+            );
+            this.warnedAboutCrossDatasetReference = true;
+          }
           return undefined;
         }
         return this.documentsCache.get(
-          `${this.config.projectId}-${this.config.dataset}-${sourceDocument._id}`,
+          getTurboCacheKey(
+            this.config.projectId,
+            this.config.dataset,
+            sourceDocument._id,
+          ),
         );
       },
       (changedValue: any, { previousValue }) => {
@@ -265,21 +205,26 @@ export class LivePreviewService {
     );
   }
 
-  listenQuery<T>(
+  listenLiveQuery<QueryResult>(
+    initialData: QueryResult,
     query: string,
-    params: QueryParams,
-    options: QueryOptions<T> = {},
-  ): Observable<T> {
+    queryParams?: QueryParams,
+  ): Observable<QueryResult> {
+    if (!this.isBrowser) {
+      return of(initialData);
+    }
+
     this.checkInitialization();
 
+    const params = getStableQueryParams(queryParams);
     const key = getQueryCacheKey(query, params);
     let snapshot = this.snapshots.get(key) as
-      | BehaviorSubject<QuerySnapshot<T>>
+      | BehaviorSubject<QuerySnapshot<QueryResult>>
       | undefined;
 
     if (!snapshot) {
-      snapshot = new BehaviorSubject<QuerySnapshot<T>>({
-        result: options.initialSnapshot ?? (null as unknown as T),
+      snapshot = new BehaviorSubject<QuerySnapshot<QueryResult>>({
+        result: initialData ?? (null as unknown as QueryResult),
         resultSourceMap: {} as ContentSourceMap,
       });
       this.snapshots.set(
@@ -294,60 +239,81 @@ export class LivePreviewService {
       }
 
       cacheEntry.refCount++;
+
+      this.handleRevalidation(query, params);
     }
 
-    // Ensure we add the query to the subscriptions
-    this.subscriptions.next({ query, params });
+    return new Observable<QueryResult>((observer) => {
+      const subscription = snapshot
+        .pipe(
+          map((snapshot) => snapshot.result),
+          distinctUntilChanged(),
+        )
+        .subscribe(observer);
 
-    return this.revalidateService.getRevalidateState().pipe(
-      tap(console.log),
-      switchMap((state) =>
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.handleRevalidateState(state, query, params, snapshot!),
-      ),
-      map((snapshot) => snapshot.result),
-      distinctUntilChanged(),
-      shareReplay(1),
-      takeUntilDestroyed(this.destroyRef),
-      tap(() => this.cacheCleanup(key)),
-    );
+      return () => {
+        subscription.unsubscribe();
+        this.cacheCleanup(key);
+      };
+    }).pipe(shareReplay(1));
+  }
+
+  private handleRevalidation(query: string, params: QueryParams) {
+    this.revalidateService
+      .getRevalidateState()
+      .pipe(
+        map((state) => state === 'refresh' || state === 'inflight'),
+        filter(Boolean),
+        distinctUntilChanged(),
+        switchMap(() => this.fetchQuery(query, params)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
   private fetchQuery(query: string, params: QueryParams): Observable<void> {
+    const onFinally = this.revalidateService.startRefresh();
+    const controller = new AbortController();
     return from(
-      this.client.fetch(query, params, { filterResponse: false }),
+      this.client.fetch(query, params, {
+        signal: controller.signal,
+        filterResponse: false,
+      }),
     ).pipe(
       tap(({ result, resultSourceMap }) => {
-        const key = getQueryCacheKey(query, params);
-        const snapshot = this.snapshots.get(key);
-        if (snapshot) {
-          snapshot.next({
-            result: this.turboChargeResultIfSourceMap(result, resultSourceMap),
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            resultSourceMap: resultSourceMap!,
-          });
+        this.updateSnapshot(query, params, result, resultSourceMap);
+
+        if (resultSourceMap) {
+          this.turboIdsFromSourceMap(resultSourceMap);
         }
       }),
+      catchError((error) => {
+        if (error.name !== 'AbortError') {
+          // Here you might want to implement error handling
+          console.error(error);
+        }
+        return EMPTY;
+      }),
+      finalize(onFinally),
       map(() => undefined),
     );
   }
 
-  private handleRevalidateState<T>(
-    state: RevalidateState,
+  private updateSnapshot(
     query: string,
     params: QueryParams,
-    snapshot: BehaviorSubject<QuerySnapshot<T>>,
-  ): Observable<QuerySnapshot<T>> {
-    if (state === 'refresh' || state === 'stale') {
-      return this.fetchQuery(query, params).pipe(
-        tap(() => {
-          const endRefresh = this.revalidateService.startRefresh();
-          endRefresh(); // Call immediately after fetch is complete
-        }),
-        switchMap(() => snapshot.asObservable()),
-      );
+    result: unknown,
+    resultSourceMap?: ContentSourceMap,
+  ): void {
+    const key = getQueryCacheKey(query, params);
+    const snapshot = this.snapshots.get(key);
+    if (snapshot) {
+      snapshot.next({
+        result: this.turboChargeResultIfSourceMap(result, resultSourceMap),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        resultSourceMap: resultSourceMap!,
+      });
     }
-    return snapshot.asObservable();
   }
 
   private setupTurboUpdates() {
@@ -375,7 +341,7 @@ export class LivePreviewService {
             this.config.dataset,
             update.documentId,
           );
-          const cachedDocument = this.documentsCache.get(key);
+          const cachedDocument = this.documentsCache.peek(key);
           if (cachedDocument) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const patchDoc = { ...cachedDocument } as any;
@@ -455,27 +421,13 @@ export class LivePreviewService {
       });
   }
 
-  private setupRefreshCycle(): void {
-    this.revalidateService
-      .setupRevalidate(this.refreshInterval)
-      .pipe(
-        filter((state) => state === 'refresh' || state === 'stale'),
-        switchMap(() => this.refreshAllSnapshots()),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(() => {
-        const endRefresh = this.revalidateService.startRefresh();
-        // The refresh is complete when this subscription fires
-        endRefresh();
-      });
-  }
-
-  private cacheCleanup(key: string) {
+  private cacheCleanup(key: QueryCacheKey) {
     const entry = this.queryParamsCache.get(key);
     if (entry) {
       entry.refCount--;
       if (entry.refCount === 0) {
         this.queryParamsCache.delete(key);
+        this.snapshots.delete(key);
       }
     }
   }
