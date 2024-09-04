@@ -9,7 +9,7 @@ export interface QuerySnapshot<T> {
   resultSourceMap: ContentSourceMap;
 }
 
-export interface QuerySubscription {
+export interface EnhancedQuerySnapshot<T> extends QuerySnapshot<T> {
   query: string;
   params: QueryParams;
 }

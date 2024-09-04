@@ -6,6 +6,7 @@ import {
   from,
   Observable,
   of,
+  takeWhile,
 } from 'rxjs';
 import {
   catchError,
@@ -13,7 +14,6 @@ import {
   filter,
   finalize,
   map,
-  shareReplay,
   switchMap,
   tap,
 } from 'rxjs/operators';
@@ -22,7 +22,7 @@ import { applyPatch } from 'mendoza';
 import { vercelStegaSplit } from '@vercel/stega';
 import { applySourceDocuments } from '@sanity/client/csm';
 import { LIVE_PREVIEW_REFRESH_INTERVAL, SANITY_CLIENT_FACTORY } from './tokens';
-import { QuerySnapshot, QueryCacheKey } from './types';
+import { QueryCacheKey, type EnhancedQuerySnapshot } from './types';
 import {
   ContentSourceMap,
   QueryParams,
@@ -76,16 +76,12 @@ export class LivePreviewService {
   private config!: Required<InitializedClientConfig>;
   private snapshots = new Map<
     QueryCacheKey,
-    BehaviorSubject<QuerySnapshot<unknown>>
-  >();
-  private queryParamsCache = new Map<
-    string,
-    { query: string; params: QueryParams; refCount: number }
+    BehaviorSubject<EnhancedQuerySnapshot<unknown>>
   >();
   private documentsCache!: LRUCache<string, SanityDocument>;
   private docsInUse = new Map<string, ContentSourceMap['documents'][number]>();
   private lastMutatedDocumentId$ = new BehaviorSubject<string | null>(null);
-  private turboIds = new BehaviorSubject<string[]>([]);
+  private turboIds$ = new BehaviorSubject<string[]>([]);
   private isInitialized = false;
   private warnedAboutCrossDatasetReference = false;
 
@@ -122,6 +118,8 @@ export class LivePreviewService {
       this.loadMissingDocuments();
       this.revalidateService.setupRevalidate(this.refreshInterval);
       this.setupSourceMapUpdates();
+      this.updateActiveDocumentIds();
+      this.syncWithPresentationToolIfPresent();
     }
 
     this.isInitialized = true;
@@ -143,11 +141,9 @@ export class LivePreviewService {
         nextTurboIds.add(document._id);
         this.docsInUse.set(document._id, document);
       }
-
-      this.useDocumentsInUse.updateDocumentsInUse(this.docsInUse);
     }
 
-    const prevTurboIds = this.turboIds.getValue();
+    const prevTurboIds = this.turboIds$.getValue();
     const mergedTurboIds = Array.from(
       new Set([...prevTurboIds, ...nextTurboIds]),
     );
@@ -155,7 +151,7 @@ export class LivePreviewService {
       JSON.stringify(mergedTurboIds.sort()) !==
       JSON.stringify(prevTurboIds.sort())
     ) {
-      this.turboIds.next(mergedTurboIds);
+      this.turboIds$.next(mergedTurboIds);
     }
   }
 
@@ -219,46 +215,36 @@ export class LivePreviewService {
     const params = getStableQueryParams(queryParams);
     const key = getQueryCacheKey(query, params);
     let snapshot = this.snapshots.get(key) as
-      | BehaviorSubject<QuerySnapshot<QueryResult>>
+      | BehaviorSubject<EnhancedQuerySnapshot<QueryResult>>
       | undefined;
 
     if (!snapshot) {
-      snapshot = new BehaviorSubject<QuerySnapshot<QueryResult>>({
+      snapshot = new BehaviorSubject<EnhancedQuerySnapshot<QueryResult>>({
         result: initialData ?? (null as unknown as QueryResult),
         resultSourceMap: {} as ContentSourceMap,
+        query,
+        params,
       });
       this.snapshots.set(
         key,
-        snapshot as BehaviorSubject<QuerySnapshot<unknown>>,
+        snapshot as BehaviorSubject<EnhancedQuerySnapshot<unknown>>,
       );
-
-      let cacheEntry = this.queryParamsCache.get(key);
-      if (!cacheEntry) {
-        cacheEntry = { query, params, refCount: 0 };
-        this.queryParamsCache.set(key, cacheEntry);
-      }
-
-      cacheEntry.refCount++;
-
-      this.handleRevalidation(query, params);
     }
 
-    return new Observable<QueryResult>((observer) => {
-      const subscription = snapshot
-        .pipe(
-          map((snapshot) => snapshot.result),
-          distinctUntilChanged(),
-        )
-        .subscribe(observer);
+    if (!snapshot.observed) {
+      this.handleRevalidation(snapshot);
+    }
 
-      return () => {
-        subscription.unsubscribe();
-        this.cacheCleanup(key);
-      };
-    }).pipe(shareReplay(1));
+    return snapshot.pipe(
+      map((snapshot) => snapshot.result),
+      distinctUntilChanged(),
+    );
   }
 
-  private handleRevalidation(query: string, params: QueryParams) {
+  private handleRevalidation<QueryResult>(
+    snapshot: BehaviorSubject<EnhancedQuerySnapshot<QueryResult>>,
+  ) {
+    const { query, params } = snapshot.getValue();
     this.revalidateService
       .getRevalidateState()
       .pipe(
@@ -266,6 +252,7 @@ export class LivePreviewService {
         filter(Boolean),
         distinctUntilChanged(),
         switchMap(() => this.fetchQuery(query, params)),
+        takeWhile(() => snapshot.observed),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
@@ -282,7 +269,6 @@ export class LivePreviewService {
     ).pipe(
       tap(({ result, resultSourceMap }) => {
         this.updateSnapshot(query, params, result, resultSourceMap);
-
         if (resultSourceMap) {
           this.turboIdsFromSourceMap(resultSourceMap);
         }
@@ -309,6 +295,7 @@ export class LivePreviewService {
     const snapshot = this.snapshots.get(key);
     if (snapshot) {
       snapshot.next({
+        ...snapshot.getValue(),
         result: this.turboChargeResultIfSourceMap(result, resultSourceMap),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         resultSourceMap: resultSourceMap!,
@@ -359,7 +346,7 @@ export class LivePreviewService {
   }
 
   private setupSourceMapUpdates(): void {
-    combineLatest([this.lastMutatedDocumentId$, this.turboIds])
+    combineLatest([this.lastMutatedDocumentId$, this.turboIds$])
       .pipe(
         filter(
           ([lastMutatedDocumentId, turboIds]) =>
@@ -371,6 +358,37 @@ export class LivePreviewService {
       .subscribe(() => {
         this.lastMutatedDocumentId$.next(null);
       });
+  }
+
+  private updateActiveDocumentIds(): void {
+    this.turboIds$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((turboIds) => {
+        const nextTurboIds = new Set<string>();
+        this.docsInUse.clear();
+        for (const snapshot of this.snapshots.values()) {
+          if (snapshot.observed) {
+            const { resultSourceMap } = snapshot.getValue();
+            if (resultSourceMap?.documents?.length) {
+              for (const document of resultSourceMap.documents) {
+                nextTurboIds.add(document._id);
+                this.docsInUse.set(document._id, document);
+              }
+            }
+          }
+        }
+
+        const nextTurboIdsSnapshot = [...nextTurboIds].sort();
+        if (JSON.stringify(turboIds) !== JSON.stringify(nextTurboIdsSnapshot)) {
+          this.turboIds$.next(nextTurboIdsSnapshot);
+        }
+      });
+  }
+
+  private syncWithPresentationToolIfPresent(): void {
+    this.turboIds$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.useDocumentsInUse.updateDocumentsInUse(this.docsInUse);
+    });
   }
 
   private updateAllSnapshots(): Observable<void> {
@@ -392,7 +410,8 @@ export class LivePreviewService {
   }
 
   private loadMissingDocuments() {
-    this.turboIds
+    const { projectId, dataset } = this.config;
+    this.turboIds$
       .pipe(
         distinctUntilChanged(
           (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
@@ -401,7 +420,7 @@ export class LivePreviewService {
           ids.filter(
             (id) =>
               !this.documentsCache.has(
-                `${this.config.projectId}-${this.config.dataset}-${id}`,
+                getTurboCacheKey(projectId, dataset, id),
               ),
           ),
         ),
@@ -413,22 +432,11 @@ export class LivePreviewService {
         for (const doc of documents) {
           if (doc && doc._id) {
             this.documentsCache.set(
-              `${this.config.projectId}-${this.config.dataset}-${doc._id}`,
+              getTurboCacheKey(projectId, dataset, doc._id),
               doc,
             );
           }
         }
       });
-  }
-
-  private cacheCleanup(key: QueryCacheKey) {
-    const entry = this.queryParamsCache.get(key);
-    if (entry) {
-      entry.refCount--;
-      if (entry.refCount === 0) {
-        this.queryParamsCache.delete(key);
-        this.snapshots.delete(key);
-      }
-    }
   }
 }
