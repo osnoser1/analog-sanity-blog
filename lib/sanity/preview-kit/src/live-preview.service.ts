@@ -4,6 +4,7 @@ import {
   combineLatest,
   EMPTY,
   from,
+  mergeMap,
   Observable,
   of,
   takeWhile,
@@ -411,32 +412,63 @@ export class LivePreviewService {
 
   private loadMissingDocuments() {
     const { projectId, dataset } = this.config;
-    this.turboIds$
+    const documentsCache = this.documentsCache;
+    const batch$ = new BehaviorSubject<string[][]>([]);
+    combineLatest([batch$, this.turboIds$])
       .pipe(
-        distinctUntilChanged(
-          (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
-        ),
-        map((ids) =>
-          ids.filter(
-            (id) =>
-              !this.documentsCache.has(
-                getTurboCacheKey(projectId, dataset, id),
-              ),
-          ),
-        ),
-        filter((missingIds) => missingIds.length > 0),
-        switchMap((missingIds) => this.client.getDocuments(missingIds)),
+        map(([batch, turboIds]) => {
+          const batchSet = new Set(batch.flat());
+          const nextBatch = new Set<string>();
+          for (const turboId of turboIds) {
+            if (
+              !batchSet.has(turboId) &&
+              !documentsCache.has(getTurboCacheKey(projectId, dataset, turboId))
+            ) {
+              nextBatch.add(turboId);
+            }
+          }
+
+          return [...nextBatch].slice(0, 100);
+        }),
+        filter((nextBatchSlice) => !!nextBatchSlice.length),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((documents) => {
-        for (const doc of documents) {
-          if (doc && doc._id) {
-            this.documentsCache.set(
-              getTurboCacheKey(projectId, dataset, doc._id),
-              doc,
-            );
-          }
-        }
+      .subscribe((nextBatchSlice) => {
+        const prevBatch = batch$.getValue();
+        batch$.next([...prevBatch.slice(-100), nextBatchSlice]);
       });
+
+    batch$
+      .pipe(
+        switchMap((batches) => from(batches)),
+        mergeMap((ids) => {
+          const missingIds = ids.filter(
+            (id) =>
+              !documentsCache.has(getTurboCacheKey(projectId, dataset, id)),
+          );
+          if (missingIds.length === 0) {
+            return EMPTY;
+          }
+
+          return from(this.client.getDocuments(missingIds)).pipe(
+            tap((documents) => {
+              for (const doc of documents) {
+                if (doc && doc._id) {
+                  documentsCache.set(
+                    getTurboCacheKey(projectId, dataset, doc._id),
+                    doc,
+                  );
+                }
+              }
+            }),
+            catchError((error) => {
+              console.error('Error loading documents:', error);
+              return EMPTY;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 }
