@@ -26,5 +26,10 @@ export function setDraftMode(event: H3Event, enable = true): void {
 
 export function isDraftMode(event: H3Event): boolean {
   const prerenderBypassCookie = getCookie(event, PRERENDER_BYPASS_COOKIE_NAME);
-  return prerenderBypassCookie === BYPASS_TOKEN;
+  console.log(
+    prerenderBypassCookie === BYPASS_TOKEN,
+    prerenderBypassCookie,
+    BYPASS_TOKEN,
+  );
+  return !!prerenderBypassCookie && prerenderBypassCookie === BYPASS_TOKEN;
 }

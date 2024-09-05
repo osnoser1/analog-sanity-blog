@@ -6,8 +6,6 @@ import { generateToken } from './src/server/utils/generate-token';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
-  process.env['VERCEL_BYPASS_TOKEN'] = generateToken();
-
   return {
     root: __dirname,
     cacheDir: `../node_modules/.vite`,
@@ -27,13 +25,12 @@ export default defineConfig(() => {
         nitro: {
           static: false,
           routeRules: {
-            '/': { prerender: false },
+            '/': { prerender: false, isr: 60 },
             '/api/sitemap.xml': { isr: 3600 * 24 },
+            '/posts/**': { isr: 60 },
           },
           vercel: {
-            config: {
-              bypassToken: process.env['VERCEL_BYPASS_TOKEN'],
-            },
+            config: { bypassToken: process.env['VERCEL_BYPASS_TOKEN'] },
           },
         },
       }),
