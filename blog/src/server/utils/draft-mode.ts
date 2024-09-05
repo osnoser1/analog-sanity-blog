@@ -1,27 +1,30 @@
 import { H3Event, deleteCookie, getCookie, setCookie } from 'h3';
-import { createHash } from 'crypto';
 
-const DRAFT_MODE_COOKIE_NAME = '__draft_mode';
+const PRERENDER_BYPASS_COOKIE_NAME = '__prerender_bypass';
 const COOKIE_MAX_AGE = 60 * 60; // 1 hour
 
-function generateToken(): string {
-  return createHash('sha256').update(Date.now().toString()).digest('hex');
+const BYPASS_TOKEN = import.meta.env.VERCEL_BYPASS_TOKEN;
+
+if (!BYPASS_TOKEN) {
+  console.warn(
+    'VERCEL_BYPASS_TOKEN is not set. Draft Mode will not work correctly.',
+  );
 }
 
 export function setDraftMode(event: H3Event, enable = true): void {
-  const token = generateToken();
-  if (enable) {
-    setCookie(event, DRAFT_MODE_COOKIE_NAME, token, {
+  if (enable && BYPASS_TOKEN) {
+    setCookie(event, PRERENDER_BYPASS_COOKIE_NAME, BYPASS_TOKEN, {
       httpOnly: true,
       secure: process.env['NODE_ENV'] === 'production',
       maxAge: COOKIE_MAX_AGE,
       path: '/',
     });
   } else {
-    deleteCookie(event, DRAFT_MODE_COOKIE_NAME);
+    deleteCookie(event, PRERENDER_BYPASS_COOKIE_NAME);
   }
 }
 
 export function isDraftMode(event: H3Event): boolean {
-  return !!getCookie(event, DRAFT_MODE_COOKIE_NAME);
+  const prerenderBypassCookie = getCookie(event, PRERENDER_BYPASS_COOKIE_NAME);
+  return prerenderBypassCookie === BYPASS_TOKEN;
 }
