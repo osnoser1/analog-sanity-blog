@@ -30,7 +30,11 @@ export const routeMeta: RouteMeta = {
       const title = settings?.title ?? '';
       const description = toPlainText(settings?.description ?? []);
       const image = resolveOpenGraphImage(post?.coverImage);
-      return generateMetaTags({ title, description, image });
+      return generateMetaTags({
+        title: post?.title ? `${post.title} | ${title}` : title,
+        description,
+        image,
+      });
     }) satisfies ResolveFn<MetaTag[]>,
   },
 };

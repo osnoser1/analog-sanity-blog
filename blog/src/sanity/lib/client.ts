@@ -1,7 +1,12 @@
 import { createClient, type SanityClient } from '@sanity/client';
 
 import { apiVersion, dataset, projectId, studioUrl } from './api';
-import { heroPostQuery, moreStoriesQuery, settingsQuery } from './queries';
+import {
+  heroPostQuery,
+  moreStoriesQuery,
+  postBySlugQuery,
+  settingsQuery,
+} from './queries';
 import {
   type HeroQueryResult,
   type MoreStoriesQueryResult,
@@ -64,6 +69,13 @@ export async function getHeroPost(
   client: SanityClient,
 ): Promise<HeroQueryResult> {
   return await client.fetch(heroPostQuery);
+}
+
+export async function getPostBySlug(
+  client: SanityClient,
+  slug: string,
+): Promise<PostQueryResult> {
+  return await client.fetch(postBySlugQuery, { slug });
 }
 
 export async function getMoreStories(
