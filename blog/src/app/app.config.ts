@@ -1,7 +1,7 @@
 import {
   type ApplicationConfig,
   ENVIRONMENT_INITIALIZER,
-  provideZoneChangeDetection,
+  provideExperimentalZonelessChangeDetection,
 } from '@angular/core';
 import {
   provideHttpClient,
@@ -28,7 +28,7 @@ import { updateMetaTagsOnRouteChange } from './utils/meta-tags';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideExperimentalZonelessChangeDetection(),
     provideFileRouter(
       withComponentInputBinding(),
       withNavigationErrorHandler(console.error),
