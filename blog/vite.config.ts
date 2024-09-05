@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 
 import analog from '@analogjs/platform';
-import { defineConfig, Plugin, splitVendorChunkPlugin } from 'vite';
+import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import webfontDownload from 'vite-plugin-webfont-dl';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
@@ -23,7 +23,12 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       analog({
-        nitro: { routeRules: { '/': { prerender: false } } },
+        nitro: {
+          routeRules: {
+            '/': { prerender: false },
+            '/api/sitemap.xml': { isr: 3600 * 24 },
+          },
+          },
       }),
       nxViteTsPaths(),
       splitVendorChunkPlugin(),

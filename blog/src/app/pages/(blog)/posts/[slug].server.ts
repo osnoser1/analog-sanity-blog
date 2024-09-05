@@ -32,3 +32,5 @@ export const load = async ({ event, params }: PageServerLoad) => {
     token: draftMode ? readToken : '',
   };
 };
+
+export type LoadResult = Awaited<ReturnType<typeof load>>;

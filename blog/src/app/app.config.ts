@@ -1,5 +1,6 @@
 import {
   type ApplicationConfig,
+  ENVIRONMENT_INITIALIZER,
   provideZoneChangeDetection,
 } from '@angular/core';
 import {
@@ -23,6 +24,7 @@ import {
 
 import { cookieInterceptor } from './interceptors/cookies.interceptor';
 import { client, getClient } from '../sanity/lib/client';
+import { updateMetaTagsOnRouteChange } from './utils/meta-tags';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,5 +37,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([cookieInterceptor])),
     provideSanity(getClient, withLivePreview()),
     provideSanityLoader(client.config() as Required<InitializedClientConfig>),
+    {
+      provide: ENVIRONMENT_INITIALIZER,
+      multi: true,
+      useValue: () => updateMetaTagsOnRouteChange(),
+    },
   ],
 };
