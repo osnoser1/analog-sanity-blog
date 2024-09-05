@@ -24,11 +24,12 @@ export default defineConfig(({ mode }) => {
     plugins: [
       analog({
         nitro: {
+          static: false,
           routeRules: {
             '/': { prerender: false },
             '/api/sitemap.xml': { isr: 3600 * 24 },
           },
-          },
+        },
       }),
       nxViteTsPaths(),
       splitVendorChunkPlugin(),

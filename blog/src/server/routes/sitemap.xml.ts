@@ -16,20 +16,17 @@ async function getSanityPosts(): Promise<SanityPost[]> {
   }
 }
 
-function getBaseUrl(url: URL): string {
-  return `${url.protocol}//${url.host}`;
-}
-
 export default useBase(
   '/',
   defineEventHandler(async (event) => {
     console.log('Generating sitemap');
-    const requestUrl = getRequestURL(event);
-    const baseUrl = getBaseUrl(requestUrl);
+    const baseUrl = process.env['VERCEL_PROJECT_PRODUCTION_URL']
+      ? `https://${process.env['VERCEL_PROJECT_PRODUCTION_URL']}`
+      : getRequestURL(event);
 
     const posts = await getSanityPosts();
 
-    const sitemap = new SitemapStream({ hostname: baseUrl });
+    const sitemap = new SitemapStream({ hostname: baseUrl.toString() });
 
     // Add the homepage
     sitemap.write({ url: '/', changefreq: 'daily', priority: 1 });
