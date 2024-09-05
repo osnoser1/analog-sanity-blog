@@ -4,16 +4,12 @@ import type {
   SanityClient,
 } from '@sanity/client';
 
-export interface QueryOptions<T> {
-  initialSnapshot?: T;
-}
-
 export interface QuerySnapshot<T> {
   result: T;
   resultSourceMap: ContentSourceMap;
 }
 
-export interface QuerySubscription {
+export interface EnhancedQuerySnapshot<T> extends QuerySnapshot<T> {
   query: string;
   params: QueryParams;
 }

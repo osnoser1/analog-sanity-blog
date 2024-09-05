@@ -3,16 +3,18 @@ import {
   BehaviorSubject,
   combineLatest,
   EMPTY,
-  forkJoin,
   from,
+  mergeMap,
   Observable,
-  Subject,
+  of,
+  takeWhile,
 } from 'rxjs';
 import {
+  catchError,
   distinctUntilChanged,
   filter,
+  finalize,
   map,
-  shareReplay,
   switchMap,
   tap,
 } from 'rxjs/operators';
@@ -21,12 +23,7 @@ import { applyPatch } from 'mendoza';
 import { vercelStegaSplit } from '@vercel/stega';
 import { applySourceDocuments } from '@sanity/client/csm';
 import { LIVE_PREVIEW_REFRESH_INTERVAL, SANITY_CLIENT_FACTORY } from './tokens';
-import {
-  QuerySnapshot,
-  QuerySubscription,
-  QueryCacheKey,
-  QueryOptions,
-} from './types';
+import { QueryCacheKey, type EnhancedQuerySnapshot } from './types';
 import {
   ContentSourceMap,
   QueryParams,
@@ -35,7 +32,7 @@ import {
   InitializedClientConfig,
   type SanityClient,
 } from '@sanity/client';
-import { RevalidateService, RevalidateState } from './revalidate.service';
+import { RevalidateService } from './revalidate.service';
 import { isPlatformBrowser } from '@angular/common';
 import { UseDocumentsInUse } from '@limitless-angular/sanity/preview-kit-compat';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -55,6 +52,18 @@ function getQueryCacheKey(query: string, params: QueryParams): QueryCacheKey {
   return `${query}-${JSON.stringify(params)}`;
 }
 
+/**
+ * Return params that are stable with deep equal as long as the key order is the same
+ *
+ * Based on https://github.com/sanity-io/visual-editing/blob/main/packages/visual-editing-helpers/src/hooks/useQueryParams.ts
+ * @internal
+ */
+function getStableQueryParams(
+  params?: undefined | null | QueryParams,
+): QueryParams {
+  return JSON.parse(JSON.stringify(params ?? {}));
+}
+
 @Injectable()
 export class LivePreviewService {
   private client!: SanityClient;
@@ -68,21 +77,14 @@ export class LivePreviewService {
   private config!: Required<InitializedClientConfig>;
   private snapshots = new Map<
     QueryCacheKey,
-    BehaviorSubject<QuerySnapshot<unknown>>
-  >();
-  private queryParamsCache = new Map<
-    string,
-    { query: string; params: QueryParams; refCount: number }
+    BehaviorSubject<EnhancedQuerySnapshot<unknown>>
   >();
   private documentsCache!: LRUCache<string, SanityDocument>;
-  private documentsInUse = new Map<
-    string,
-    ContentSourceMap['documents'][number]
-  >();
+  private docsInUse = new Map<string, ContentSourceMap['documents'][number]>();
   private lastMutatedDocumentId$ = new BehaviorSubject<string | null>(null);
-  private subscriptions = new Subject<QuerySubscription>();
-  private turboIds = new BehaviorSubject<string[]>([]);
+  private turboIds$ = new BehaviorSubject<string[]>([]);
   private isInitialized = false;
+  private warnedAboutCrossDatasetReference = false;
 
   initialize(token: string): void {
     if (this.isInitialized) {
@@ -113,11 +115,12 @@ export class LivePreviewService {
 
     if (this.isBrowser) {
       this.useDocumentsInUse.initialize(this.config);
-      this.setupSubscriptions();
       this.setupTurboUpdates();
       this.loadMissingDocuments();
-      this.setupRefreshCycle();
+      this.revalidateService.setupRevalidate(this.refreshInterval);
       this.setupSourceMapUpdates();
+      this.updateActiveDocumentIds();
+      this.syncWithPresentationToolIfPresent();
     }
 
     this.isInitialized = true;
@@ -131,99 +134,25 @@ export class LivePreviewService {
     }
   }
 
-  private setupSubscriptions() {
-    this.subscriptions
-      .pipe(
-        distinctUntilChanged(
-          (prev, curr) =>
-            prev.query === curr.query &&
-            JSON.stringify(prev.params) === JSON.stringify(curr.params),
-        ),
-        tap(({ query, params }) => {
-          const key = getQueryCacheKey(query, params);
-          if (!this.snapshots.has(key)) {
-            this.snapshots.set(
-              key,
-              new BehaviorSubject<QuerySnapshot<unknown>>({
-                result: null,
-                resultSourceMap: {} as ContentSourceMap,
-              }),
-            );
-          }
-        }),
-        switchMap(({ query, params }) =>
-          this.fetchAndUpdateSnapshot(query, params),
-        ),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe();
-  }
-
-  private fetchAndUpdateSnapshot(
-    query: string,
-    params: QueryParams,
-  ): Observable<void> {
-    return from(
-      this.client
-        .fetch<{
-          result: unknown;
-          resultSourceMap: ContentSourceMap;
-        }>(query, params, { filterResponse: false })
-        .then(({ result, resultSourceMap }) => {
-          const key = getQueryCacheKey(query, params);
-          const snapshot = this.snapshots.get(key);
-          if (snapshot) {
-            snapshot.next({
-              result: this.turboChargeResultIfSourceMap(
-                result,
-                resultSourceMap,
-              ),
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              resultSourceMap: resultSourceMap ?? ({} as ContentSourceMap),
-            });
-          }
-
-          return resultSourceMap;
-        }),
-    ).pipe(
-      tap((resultSourceMap) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.updateTurboIds(resultSourceMap!);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.updateDocumentsInUse(resultSourceMap!);
-      }),
-      map(() => undefined),
-    );
-  }
-
-  private refreshAllSnapshots(): Observable<void> {
-    const refreshObservables = Array.from(this.snapshots.entries())
-      .filter(([key]) => this.queryParamsCache.has(key))
-      .map(([key]) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { query, params } = this.queryParamsCache.get(key)!;
-        return this.fetchAndUpdateSnapshot(query, params);
-      });
-
-    return forkJoin(refreshObservables).pipe(map(() => undefined));
-  }
-
-  private updateTurboIds(resultSourceMap: ContentSourceMap) {
-    if (resultSourceMap?.documents?.length) {
-      const newIds = resultSourceMap.documents.map((doc) => doc._id);
-      this.turboIds.next([
-        ...new Set([...this.turboIds.getValue(), ...newIds]),
-      ]);
-    }
-  }
-
-  private updateDocumentsInUse(resultSourceMap: ContentSourceMap) {
+  private turboIdsFromSourceMap(resultSourceMap: ContentSourceMap) {
+    const nextTurboIds = new Set<string>();
+    this.docsInUse.clear();
     if (resultSourceMap?.documents?.length) {
       for (const document of resultSourceMap.documents) {
-        this.documentsInUse.set(document._id, document);
+        nextTurboIds.add(document._id);
+        this.docsInUse.set(document._id, document);
       }
+    }
 
-      this.useDocumentsInUse.updateDocumentsInUse(this.documentsInUse);
+    const prevTurboIds = this.turboIds$.getValue();
+    const mergedTurboIds = Array.from(
+      new Set([...prevTurboIds, ...nextTurboIds]),
+    );
+    if (
+      JSON.stringify(mergedTurboIds.sort()) !==
+      JSON.stringify(prevTurboIds.sort())
+    ) {
+      this.turboIds$.next(mergedTurboIds);
     }
   }
 
@@ -240,14 +169,22 @@ export class LivePreviewService {
       resultSourceMap,
       (sourceDocument) => {
         if (sourceDocument._projectId) {
-          console.warn(
-            'Cross dataset references are not supported yet, ignoring source document',
-            sourceDocument,
-          );
+          // @TODO Handle cross dataset references
+          if (!this.warnedAboutCrossDatasetReference) {
+            console.warn(
+              'Cross dataset references are not supported yet, ignoring source document',
+              sourceDocument,
+            );
+            this.warnedAboutCrossDatasetReference = true;
+          }
           return undefined;
         }
         return this.documentsCache.get(
-          `${this.config.projectId}-${this.config.dataset}-${sourceDocument._id}`,
+          getTurboCacheKey(
+            this.config.projectId,
+            this.config.dataset,
+            sourceDocument._id,
+          ),
         );
       },
       (changedValue: any, { previousValue }) => {
@@ -265,89 +202,106 @@ export class LivePreviewService {
     );
   }
 
-  listenQuery<T>(
+  listenLiveQuery<QueryResult>(
+    initialData: QueryResult,
     query: string,
-    params: QueryParams,
-    options: QueryOptions<T> = {},
-  ): Observable<T> {
+    queryParams?: QueryParams,
+  ): Observable<QueryResult> {
+    if (!this.isBrowser) {
+      return of(initialData);
+    }
+
     this.checkInitialization();
 
+    const params = getStableQueryParams(queryParams);
     const key = getQueryCacheKey(query, params);
     let snapshot = this.snapshots.get(key) as
-      | BehaviorSubject<QuerySnapshot<T>>
+      | BehaviorSubject<EnhancedQuerySnapshot<QueryResult>>
       | undefined;
 
     if (!snapshot) {
-      snapshot = new BehaviorSubject<QuerySnapshot<T>>({
-        result: options.initialSnapshot ?? (null as unknown as T),
+      snapshot = new BehaviorSubject<EnhancedQuerySnapshot<QueryResult>>({
+        result: initialData ?? (null as unknown as QueryResult),
         resultSourceMap: {} as ContentSourceMap,
+        query,
+        params,
       });
       this.snapshots.set(
         key,
-        snapshot as BehaviorSubject<QuerySnapshot<unknown>>,
+        snapshot as BehaviorSubject<EnhancedQuerySnapshot<unknown>>,
       );
-
-      let cacheEntry = this.queryParamsCache.get(key);
-      if (!cacheEntry) {
-        cacheEntry = { query, params, refCount: 0 };
-        this.queryParamsCache.set(key, cacheEntry);
-      }
-
-      cacheEntry.refCount++;
     }
 
-    // Ensure we add the query to the subscriptions
-    this.subscriptions.next({ query, params });
+    if (!snapshot.observed) {
+      this.handleRevalidation(snapshot);
+    }
 
-    return this.revalidateService.getRevalidateState().pipe(
-      tap(console.log),
-      switchMap((state) =>
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.handleRevalidateState(state, query, params, snapshot!),
-      ),
+    return snapshot.pipe(
       map((snapshot) => snapshot.result),
       distinctUntilChanged(),
-      shareReplay(1),
-      takeUntilDestroyed(this.destroyRef),
-      tap(() => this.cacheCleanup(key)),
     );
   }
 
+  private handleRevalidation<QueryResult>(
+    snapshot: BehaviorSubject<EnhancedQuerySnapshot<QueryResult>>,
+  ) {
+    const { query, params } = snapshot.getValue();
+    this.revalidateService
+      .getRevalidateState()
+      .pipe(
+        map((state) => state === 'refresh' || state === 'inflight'),
+        filter(Boolean),
+        distinctUntilChanged(),
+        switchMap(() => this.fetchQuery(query, params)),
+        takeWhile(() => snapshot.observed),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
   private fetchQuery(query: string, params: QueryParams): Observable<void> {
+    const onFinally = this.revalidateService.startRefresh();
+    const controller = new AbortController();
     return from(
-      this.client.fetch(query, params, { filterResponse: false }),
+      this.client.fetch(query, params, {
+        signal: controller.signal,
+        filterResponse: false,
+      }),
     ).pipe(
       tap(({ result, resultSourceMap }) => {
-        const key = getQueryCacheKey(query, params);
-        const snapshot = this.snapshots.get(key);
-        if (snapshot) {
-          snapshot.next({
-            result: this.turboChargeResultIfSourceMap(result, resultSourceMap),
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            resultSourceMap: resultSourceMap!,
-          });
+        this.updateSnapshot(query, params, result, resultSourceMap);
+        if (resultSourceMap) {
+          this.turboIdsFromSourceMap(resultSourceMap);
         }
       }),
+      catchError((error) => {
+        if (error.name !== 'AbortError') {
+          // Here you might want to implement error handling
+          console.error(error);
+        }
+        return EMPTY;
+      }),
+      finalize(onFinally),
       map(() => undefined),
     );
   }
 
-  private handleRevalidateState<T>(
-    state: RevalidateState,
+  private updateSnapshot(
     query: string,
     params: QueryParams,
-    snapshot: BehaviorSubject<QuerySnapshot<T>>,
-  ): Observable<QuerySnapshot<T>> {
-    if (state === 'refresh' || state === 'stale') {
-      return this.fetchQuery(query, params).pipe(
-        tap(() => {
-          const endRefresh = this.revalidateService.startRefresh();
-          endRefresh(); // Call immediately after fetch is complete
-        }),
-        switchMap(() => snapshot.asObservable()),
-      );
+    result: unknown,
+    resultSourceMap?: ContentSourceMap,
+  ): void {
+    const key = getQueryCacheKey(query, params);
+    const snapshot = this.snapshots.get(key);
+    if (snapshot) {
+      snapshot.next({
+        ...snapshot.getValue(),
+        result: this.turboChargeResultIfSourceMap(result, resultSourceMap),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        resultSourceMap: resultSourceMap!,
+      });
     }
-    return snapshot.asObservable();
   }
 
   private setupTurboUpdates() {
@@ -375,7 +329,7 @@ export class LivePreviewService {
             this.config.dataset,
             update.documentId,
           );
-          const cachedDocument = this.documentsCache.get(key);
+          const cachedDocument = this.documentsCache.peek(key);
           if (cachedDocument) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const patchDoc = { ...cachedDocument } as any;
@@ -393,7 +347,7 @@ export class LivePreviewService {
   }
 
   private setupSourceMapUpdates(): void {
-    combineLatest([this.lastMutatedDocumentId$, this.turboIds])
+    combineLatest([this.lastMutatedDocumentId$, this.turboIds$])
       .pipe(
         filter(
           ([lastMutatedDocumentId, turboIds]) =>
@@ -405,6 +359,37 @@ export class LivePreviewService {
       .subscribe(() => {
         this.lastMutatedDocumentId$.next(null);
       });
+  }
+
+  private updateActiveDocumentIds(): void {
+    this.turboIds$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((turboIds) => {
+        const nextTurboIds = new Set<string>();
+        this.docsInUse.clear();
+        for (const snapshot of this.snapshots.values()) {
+          if (snapshot.observed) {
+            const { resultSourceMap } = snapshot.getValue();
+            if (resultSourceMap?.documents?.length) {
+              for (const document of resultSourceMap.documents) {
+                nextTurboIds.add(document._id);
+                this.docsInUse.set(document._id, document);
+              }
+            }
+          }
+        }
+
+        const nextTurboIdsSnapshot = [...nextTurboIds].sort();
+        if (JSON.stringify(turboIds) !== JSON.stringify(nextTurboIdsSnapshot)) {
+          this.turboIds$.next(nextTurboIdsSnapshot);
+        }
+      });
+  }
+
+  private syncWithPresentationToolIfPresent(): void {
+    this.turboIds$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.useDocumentsInUse.updateDocumentsInUse(this.docsInUse);
+    });
   }
 
   private updateAllSnapshots(): Observable<void> {
@@ -426,57 +411,64 @@ export class LivePreviewService {
   }
 
   private loadMissingDocuments() {
-    this.turboIds
+    const { projectId, dataset } = this.config;
+    const documentsCache = this.documentsCache;
+    const batch$ = new BehaviorSubject<string[][]>([]);
+    combineLatest([batch$, this.turboIds$])
       .pipe(
-        distinctUntilChanged(
-          (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
-        ),
-        map((ids) =>
-          ids.filter(
-            (id) =>
-              !this.documentsCache.has(
-                `${this.config.projectId}-${this.config.dataset}-${id}`,
-              ),
-          ),
-        ),
-        filter((missingIds) => missingIds.length > 0),
-        switchMap((missingIds) => this.client.getDocuments(missingIds)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((documents) => {
-        for (const doc of documents) {
-          if (doc && doc._id) {
-            this.documentsCache.set(
-              `${this.config.projectId}-${this.config.dataset}-${doc._id}`,
-              doc,
-            );
+        map(([batch, turboIds]) => {
+          const batchSet = new Set(batch.flat());
+          const nextBatch = new Set<string>();
+          for (const turboId of turboIds) {
+            if (
+              !batchSet.has(turboId) &&
+              !documentsCache.has(getTurboCacheKey(projectId, dataset, turboId))
+            ) {
+              nextBatch.add(turboId);
+            }
           }
-        }
-      });
-  }
 
-  private setupRefreshCycle(): void {
-    this.revalidateService
-      .setupRevalidate(this.refreshInterval)
-      .pipe(
-        filter((state) => state === 'refresh' || state === 'stale'),
-        switchMap(() => this.refreshAllSnapshots()),
+          return [...nextBatch].slice(0, 100);
+        }),
+        filter((nextBatchSlice) => !!nextBatchSlice.length),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => {
-        const endRefresh = this.revalidateService.startRefresh();
-        // The refresh is complete when this subscription fires
-        endRefresh();
+      .subscribe((nextBatchSlice) => {
+        const prevBatch = batch$.getValue();
+        batch$.next([...prevBatch.slice(-100), nextBatchSlice]);
       });
-  }
 
-  private cacheCleanup(key: string) {
-    const entry = this.queryParamsCache.get(key);
-    if (entry) {
-      entry.refCount--;
-      if (entry.refCount === 0) {
-        this.queryParamsCache.delete(key);
-      }
-    }
+    batch$
+      .pipe(
+        switchMap((batches) => from(batches)),
+        mergeMap((ids) => {
+          const missingIds = ids.filter(
+            (id) =>
+              !documentsCache.has(getTurboCacheKey(projectId, dataset, id)),
+          );
+          if (missingIds.length === 0) {
+            return EMPTY;
+          }
+
+          return from(this.client.getDocuments(missingIds)).pipe(
+            tap((documents) => {
+              for (const doc of documents) {
+                if (doc && doc._id) {
+                  documentsCache.set(
+                    getTurboCacheKey(projectId, dataset, doc._id),
+                    doc,
+                  );
+                }
+              }
+            }),
+            catchError((error) => {
+              console.error('Error loading documents:', error);
+              return EMPTY;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 }

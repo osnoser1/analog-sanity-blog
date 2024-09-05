@@ -1,12 +1,9 @@
-import { Component, computed, effect, inject } from '@angular/core';
+import { Component, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
 
 import { VisualEditingComponent } from '@limitless-angular/sanity/visual-editing';
-import {
-  LivePreviewService,
-  LiveQueryProviderComponent,
-} from '@limitless-angular/sanity/preview-kit';
+import { LiveQueryProviderComponent } from '@limitless-angular/sanity/preview-kit';
 
 import { AlertBannerComponent } from './(blog)/components/alert-banner.component';
 import { injectChildrenLoad } from '../utils/inject-children-load';

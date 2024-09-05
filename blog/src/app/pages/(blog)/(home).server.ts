@@ -4,7 +4,6 @@ import { isDraftMode } from '../../../server/utils/draft-mode';
 import { readToken } from '../../../sanity/lib/token';
 import {
   getClient,
-  getHeroPost,
   getMoreStories,
   getSettings,
 } from '../../../sanity/lib/client';
@@ -24,3 +23,5 @@ export const load = async ({ event }: PageServerLoad) => {
     token: draftMode ? readToken : '',
   };
 };
+
+export type LoadResult = Awaited<ReturnType<typeof load>>;

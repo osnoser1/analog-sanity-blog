@@ -1,4 +1,4 @@
-import { DestroyRef, inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 
 import {
   BehaviorSubject,
@@ -6,7 +6,7 @@ import {
   combineLatest,
   fromEvent,
   timer,
-  NEVER,
+  Subject,
 } from 'rxjs';
 import {
   distinctUntilChanged,
@@ -17,17 +17,18 @@ import {
 } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { isEqual } from 'lodash-es';
 
 export type RevalidateState = 'hit' | 'stale' | 'refresh' | 'inflight';
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class RevalidateService {
   private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private revalidateState$ = new BehaviorSubject<RevalidateState>('hit');
   private online$ = new BehaviorSubject(false);
   private visibilityState$!: Observable<DocumentVisibilityState>;
   private readonly shouldPause$!: Observable<boolean>;
-  private refreshInterval$ = new BehaviorSubject(0);
+  private refreshInterval$ = new Subject<number>();
 
   constructor() {
     if (this.isBrowser) {
@@ -80,30 +81,38 @@ export class RevalidateService {
     // Handle refresh interval
     this.refreshInterval$
       .pipe(
-        switchMap((interval) =>
-          interval > 0 ? timer(interval, interval) : NEVER,
+        // If interval is nullish then we don't want to refresh.
+        // Inflight means it's already refreshing and we pause the countdown.
+        // It's only necessary to start the countdown if the cache isn't already stale
+        filter(
+          (interval) => !!interval && this.revalidateState$.value === 'hit',
         ),
-        filter(() => this.revalidateState$.value === 'hit'),
+        switchMap((interval) => timer(interval, interval)),
         takeUntilDestroyed(),
       )
       .subscribe(() => this.revalidateState$.next('stale'));
 
-    // Handle shouldPause changes
-    this.shouldPause$
-      .pipe(distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((shouldPause) => {
-        const currentState = this.revalidateState$.value;
-        if (shouldPause && currentState === 'hit') {
+    // Revalidate on changes to shouldPause
+    combineLatest([this.shouldPause$, this.revalidateState$])
+      .pipe(
+        distinctUntilChanged<[boolean, RevalidateState]>(isEqual),
+        takeUntilDestroyed(),
+      )
+      .subscribe(([shouldPause, state]) => {
+        // Mark as stale pre-emptively if we're offline or the document isn't visible
+        if (shouldPause && state === 'hit') {
           this.revalidateState$.next('stale');
-        } else if (!shouldPause && currentState === 'stale') {
+        }
+
+        // If not paused we can mark stale as ready for refresh
+        if (!shouldPause && state === 'stale') {
           this.revalidateState$.next('refresh');
         }
       });
   }
 
-  setupRevalidate(refreshInterval: number): Observable<RevalidateState> {
+  setupRevalidate(refreshInterval: number): void {
     this.refreshInterval$.next(refreshInterval);
-    return this.revalidateState$.asObservable();
   }
 
   startRefresh(): () => void {
@@ -112,6 +121,6 @@ export class RevalidateService {
   }
 
   getRevalidateState(): Observable<RevalidateState> {
-    return this.revalidateState$.asObservable();
+    return this.revalidateState$.asObservable().pipe(distinctUntilChanged());
   }
 }
