@@ -46,10 +46,4 @@ export default class BlogPage {
   data = toSignal(injectChildrenLoad<BlogPageProps>(), { requireSync: true });
   draftMode = computed(() => this.data().draftMode);
   token = computed(() => this.data().token);
-
-  constructor() {
-    effect(() => {
-      console.log('Data:', this.data());
-    });
-  }
 }
