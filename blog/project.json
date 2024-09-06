@@ -44,12 +44,6 @@
           "buildTarget": "blog:build:production"
         }
       }
-    },
-    "test": {
-      "executor": "@analogjs/vitest-angular:test",
-      "outputs": [
-        "{projectRoot}/coverage"
-      ]
     }
   },
   "tags": [],
