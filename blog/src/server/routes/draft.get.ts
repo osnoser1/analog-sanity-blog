@@ -1,10 +1,4 @@
-import {
-  createError,
-  defineEventHandler,
-  getQuery,
-  sendRedirect,
-  setCookie,
-} from 'h3';
+import { createError, defineEventHandler, sendRedirect } from 'h3';
 import { validatePreviewUrl } from '@sanity/preview-url-secret';
 import { client } from '../../sanity/lib/client';
 import { readToken } from '../../sanity/lib/token';

@@ -7,7 +7,6 @@ module.exports = {
   content: [
     './index.html',
     join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-    join(__dirname, 'src/app/pages/posts/[slug].page.ts'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {

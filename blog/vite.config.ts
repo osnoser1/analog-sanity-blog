@@ -1,12 +1,11 @@
-/// <reference types="vitest" />
-
 import analog from '@analogjs/platform';
 import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import webfontDownload from 'vite-plugin-webfont-dl';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { generateToken } from './src/server/utils/generate-token';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   return {
     root: __dirname,
     cacheDir: `../node_modules/.vite`,
@@ -26,8 +25,12 @@ export default defineConfig(({ mode }) => {
         nitro: {
           static: false,
           routeRules: {
-            '/': { prerender: false },
+            '/': { prerender: false, isr: 60 },
             '/api/sitemap.xml': { isr: 3600 * 24 },
+            '/posts/**': { isr: 60 },
+          },
+          vercel: {
+            config: { bypassToken: process.env['VERCEL_BYPASS_TOKEN'] },
           },
         },
       }),
@@ -35,15 +38,5 @@ export default defineConfig(({ mode }) => {
       splitVendorChunkPlugin(),
       webfontDownload(),
     ],
-    test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['src/test-setup.ts'],
-      include: ['**/*.spec.ts'],
-      reporters: ['default'],
-    },
-    define: {
-      'import.meta.vitest': mode !== 'production',
-    },
   };
 });
