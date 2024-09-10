@@ -1,4 +1,4 @@
-import { defineEventHandler, sendRedirect, setCookie } from 'h3';
+import { defineEventHandler, sendRedirect } from 'h3';
 import { setDraftMode } from '../../utils/draft-mode';
 
 export default defineEventHandler(async (event) => {

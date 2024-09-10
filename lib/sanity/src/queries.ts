@@ -14,11 +14,6 @@ const postFields = /* groq */ `
   _updatedAt,
 `;
 
-export const heroPostQuery = groq`*[_type == "post" && defined(slug.current)] | order(date desc, _updatedAt desc) [0] {
-  content,
-  ${postFields}
-}`;
-
 export const moreStoriesQuery = groq`*[_type == "post" && slug.current != $skip && defined(slug.current)] | order(date desc, _updatedAt desc) [0...$limit] {
   ${postFields}
 }`;

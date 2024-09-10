@@ -1,8 +1,6 @@
 import type { SanityClient } from '@sanity/client';
-// import { sanity } from '@limitless-angular/sanity/visual-editing';
+
 import {
-  heroPostQuery,
-  type HeroPostQueryResult,
   moreStoriesQuery,
   type MoreStoriesQueryResult,
   postBySlugQuery,
@@ -11,18 +9,10 @@ import {
   SettingsQueryResult,
 } from '@analog-sanity-blog/sanity';
 
-// console.log(`Sanity import test: `, sanity());
-
 export async function getSettings(
   client: SanityClient,
 ): Promise<SettingsQueryResult> {
   return await client.fetch(settingsQuery);
-}
-
-export async function getHeroPost(
-  client: SanityClient,
-): Promise<HeroPostQueryResult> {
-  return await client.fetch(heroPostQuery);
 }
 
 export async function getPostBySlug(

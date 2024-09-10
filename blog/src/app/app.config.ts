@@ -3,11 +3,7 @@ import {
   ENVIRONMENT_INITIALIZER,
   provideExperimentalZonelessChangeDetection,
 } from '@angular/core';
-import {
-  provideHttpClient,
-  withFetch,
-  withInterceptors,
-} from '@angular/common/http';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideClientHydration } from '@angular/platform-browser';
 import {
   withComponentInputBinding,
@@ -22,7 +18,6 @@ import {
   withLivePreview,
 } from '@limitless-angular/sanity/preview-kit';
 
-import { cookieInterceptor } from './interceptors/cookies.interceptor';
 import { client, getClient } from '../sanity/lib/client';
 import { updateMetaTagsOnRouteChange } from './utils/meta-tags';
 
@@ -34,7 +29,7 @@ export const appConfig: ApplicationConfig = {
       withNavigationErrorHandler(console.error),
     ),
     provideClientHydration(),
-    provideHttpClient(withFetch(), withInterceptors([cookieInterceptor])),
+    provideHttpClient(withFetch()),
     provideSanity(getClient, withLivePreview()),
     provideSanityLoader(client.config() as Required<InitializedClientConfig>),
     {

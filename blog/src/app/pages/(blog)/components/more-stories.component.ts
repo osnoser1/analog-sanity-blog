@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { MoreStoriesQueryResult } from '../../../../../sanity.types';
+import type { MoreStoriesQueryResult } from '@analog-sanity-blog/sanity';
 import { CoverImageComponent } from './cover-image';
 import { AvatarComponent } from './avatar.component';
 import { DateComponent } from './date.component';

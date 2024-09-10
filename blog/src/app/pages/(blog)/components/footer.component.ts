@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { SettingsQueryResult } from '../../../../../sanity.types';
+import type { SettingsQueryResult } from '@analog-sanity-blog/sanity';
 import { PortableTextComponent } from './portable-text.component';
 
 @Component({

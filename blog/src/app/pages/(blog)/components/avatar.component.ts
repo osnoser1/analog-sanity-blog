@@ -6,8 +6,7 @@ import {
 } from '@angular/core';
 
 import { SanityImage } from '@limitless-angular/sanity';
-
-import { Author } from '../../../../../sanity.types';
+import type { Author } from '@analog-sanity-blog/sanity';
 
 @Component({
   selector: 'avatar',
