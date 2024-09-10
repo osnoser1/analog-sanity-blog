@@ -25,7 +25,7 @@ export const description = [
         _key: '4a58edd077882',
         _type: 'span',
         marks: [],
-        text: ' and ',
+        text: ', ',
       },
       {
         _key: '4a58edd077883',
@@ -35,6 +35,18 @@ export const description = [
       },
       {
         _key: '4a58edd077884',
+        _type: 'span',
+        marks: [],
+        text: ' and ',
+      },
+      {
+        _key: '4a58edd077885',
+        _type: 'span',
+        marks: ['1f8991913ea8'],
+        text: 'Limitless Angular',
+      },
+      {
+        _key: '4a58edd077886',
         _type: 'span',
         marks: [],
         text: '.',
@@ -51,7 +63,14 @@ export const description = [
         _type: 'link',
         href: 'https://sanity.io/',
       },
+      {
+        _key: '6b5d5d6a63cf0',
+        _type: 'link',
+        href: 'https://github.com/limitless-angular/limitless-angular',
+      },
     ],
     style: 'normal',
   },
 ];
+
+export const ogImageTitle = 'A Analog Blog with a Native Authoring Experience';

@@ -13,7 +13,7 @@ import { RouterLink } from '@angular/router';
 import { CoverImageComponent } from './components/cover-image';
 import { DateComponent } from './components/date.component';
 import { AvatarComponent } from './components/avatar.component';
-import * as demo from '../../../sanity/lib/demo';
+import { demo } from '@analog-sanity-blog/sanity';
 
 @Component({
   selector: 'intro',

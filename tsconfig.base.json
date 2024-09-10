@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@analog-sanity-blog/sanity": ["lib/sanity/src/index.ts"],
       "@limitless-angular/sanity/channels": [
         "lib/limitless-angular-sanity/channels/src/index.ts"
       ],

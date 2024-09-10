@@ -1,7 +1,6 @@
 import { Component, input } from '@angular/core';
-import { injectLoad } from '@analogjs/router';
 
-import * as demo from '../../../../sanity/lib/demo';
+import { demo } from '@analog-sanity-blog/sanity';
 
 import { type load } from './[slug].server';
 import { RouterLink } from '@angular/router';

@@ -1,0 +1,23 @@
+{
+  "extends": "../tsconfig.base.json",
+  "files": [],
+  "compilerOptions": {
+    "target": "es2022",
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "jsx": "preserve",
+    "types": ["vite/client"],
+  },
+  "include": ["**/*.ts", "**/*.tsx", "typings.d.ts"],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}

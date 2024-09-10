@@ -2,11 +2,8 @@ import { PageServerLoad } from '@analogjs/router';
 
 import { isDraftMode } from '../../../server/utils/draft-mode';
 import { readToken } from '../../../sanity/lib/token';
-import {
-  getClient,
-  getMoreStories,
-  getSettings,
-} from '../../../sanity/lib/client';
+import { getClient } from '../../../sanity/lib/client';
+import { getMoreStories, getSettings } from '../../../sanity/lib/fetchers';
 
 export const load = async ({ event }: PageServerLoad) => {
   const draftMode = isDraftMode(event);

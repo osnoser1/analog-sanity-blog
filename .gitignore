@@ -46,3 +46,5 @@ Thumbs.db
 .vercel/
 
 .env.*
+
+studio/.sanity/

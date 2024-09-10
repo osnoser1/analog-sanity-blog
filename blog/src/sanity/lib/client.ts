@@ -1,18 +1,6 @@
 import { createClient, type SanityClient } from '@sanity/client';
 
 import { apiVersion, dataset, projectId, studioUrl } from './api';
-import {
-  heroPostQuery,
-  moreStoriesQuery,
-  postBySlugQuery,
-  settingsQuery,
-} from './queries';
-import {
-  type HeroQueryResult,
-  type MoreStoriesQueryResult,
-  type PostQueryResult,
-  SettingsQueryResult,
-} from '../../../sanity.types';
 
 export const client = createClient({
   projectId,
@@ -57,31 +45,4 @@ export function getClient(preview?: { token: string }): SanityClient {
     });
   }
   return client;
-}
-
-export async function getSettings(
-  client: SanityClient,
-): Promise<SettingsQueryResult> {
-  return await client.fetch(settingsQuery);
-}
-
-export async function getHeroPost(
-  client: SanityClient,
-): Promise<HeroQueryResult> {
-  return await client.fetch(heroPostQuery);
-}
-
-export async function getPostBySlug(
-  client: SanityClient,
-  slug: string,
-): Promise<PostQueryResult> {
-  return await client.fetch(postBySlugQuery, { slug });
-}
-
-export async function getMoreStories(
-  client: SanityClient,
-  skip: string | null = null,
-  limit = 100,
-): Promise<MoreStoriesQueryResult> {
-  return await client.fetch(moreStoriesQuery, { skip, limit });
 }

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { HomePageComponent } from './home-page.component';
 import type { load } from './(home).server';
-import { moreStoriesQuery, settingsQuery } from '../../../sanity/lib/queries';
+import { moreStoriesQuery, settingsQuery } from '@analog-sanity-blog/sanity';
 import { createLiveData } from '../../utils/create-live-data';
 
 @Component({

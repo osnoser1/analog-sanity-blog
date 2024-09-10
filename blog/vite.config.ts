@@ -2,7 +2,7 @@ import analog from '@analogjs/platform';
 import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import webfontDownload from 'vite-plugin-webfont-dl';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { generateToken } from './src/server/utils/generate-token';
+import { typescriptPaths } from 'rollup-plugin-typescript-paths';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -11,7 +11,7 @@ export default defineConfig(() => {
     cacheDir: `../node_modules/.vite`,
 
     build: {
-      outDir: '../dist/./blog/client',
+      outDir: '../dist/blog/client',
       reportCompressedSize: true,
       target: ['es2020'],
     },
@@ -31,6 +31,14 @@ export default defineConfig(() => {
           },
           vercel: {
             config: { bypassToken: process.env['VERCEL_BYPASS_TOKEN'] },
+          },
+          rollupConfig: {
+            plugins: [
+              typescriptPaths({
+                tsConfigPath: 'tsconfig.base.json',
+                preserveExtensions: true,
+              }),
+            ],
           },
         },
       }),
