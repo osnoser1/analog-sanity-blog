@@ -7,7 +7,7 @@ import * as path from 'node:path';
 Object.entries(
   loadEnv(
     process.env.NODE_ENV === 'production' ? 'production' : 'development',
-    path.join(process.cwd(), '../'),
+    path.join(process.cwd(), '../../'),
   ),
 ).forEach(([key, value]) => {
   process.env[key] = value;
@@ -20,9 +20,9 @@ export default defineCliConfig({
   },
   vite: {
     root: __dirname,
-    cacheDir: '../node_modules/.vite/studio',
+    cacheDir: '../../node_modules/.vite/studio',
     build: {
-      outDir: '../dist/studio',
+      outDir: '../../dist/studio',
     },
     plugins: [nxViteTsPaths()],
     envPrefix: 'VITE_',

@@ -1,7 +1,7 @@
 {
   "name": "limitless-angular-sanity",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "lib/limitless-angular-sanity/src",
+  "sourceRoot": "packages/limitless-angular-sanity/src",
   "prefix": "lib",
   "projectType": "library",
   "tags": [],
@@ -10,14 +10,14 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
-        "project": "lib/limitless-angular-sanity/ng-package.json"
+        "project": "packages/limitless-angular-sanity/ng-package.json"
       },
       "configurations": {
         "production": {
-          "tsConfig": "lib/limitless-angular-sanity/tsconfig.lib.prod.json"
+          "tsConfig": "packages/limitless-angular-sanity/tsconfig.lib.prod.json"
         },
         "development": {
-          "tsConfig": "lib/limitless-angular-sanity/tsconfig.lib.json"
+          "tsConfig": "packages/limitless-angular-sanity/tsconfig.lib.json"
         }
       },
       "defaultConfiguration": "production"

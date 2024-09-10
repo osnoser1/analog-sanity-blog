@@ -15,24 +15,24 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@analog-sanity-blog/sanity": ["lib/sanity/src/index.ts"],
+      "@analog-sanity-blog/sanity": ["packages/sanity/src/index.ts"],
       "@limitless-angular/sanity/channels": [
-        "lib/limitless-angular-sanity/channels/src/index.ts"
+        "packages/limitless-angular-sanity/channels/src/index.ts"
       ],
       "@limitless-angular/sanity/preview-kit": [
-        "lib/limitless-angular-sanity/preview-kit/src/index.ts"
+        "packages/limitless-angular-sanity/preview-kit/src/index.ts"
       ],
       "@limitless-angular/sanity/preview-kit-compat": [
-        "lib/limitless-angular-sanity/preview-kit-compat/src/index.ts"
+        "packages/limitless-angular-sanity/preview-kit-compat/src/index.ts"
       ],
       "@limitless-angular/sanity/visual-editing": [
-        "lib/limitless-angular-sanity/visual-editing/src/index.ts"
+        "packages/limitless-angular-sanity/visual-editing/src/index.ts"
       ],
       "@limitless-angular/sanity/visual-editing-helpers": [
-        "lib/limitless-angular-sanity/visual-editing-helpers/src/index.ts"
+        "packages/limitless-angular-sanity/visual-editing-helpers/src/index.ts"
       ],
       "@limitless-angular/sanity/visual-editing-helpers/csm": [
-        "lib/limitless-angular-sanity/visual-editing-helpers/src/csm/index.ts"
+        "packages/limitless-angular-sanity/visual-editing-helpers/src/csm/index.ts"
       ]
     }
   },

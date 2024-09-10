@@ -1,4 +1,0 @@
-{
-  "path": "../{studio,lib/sanity}/src/**/*.{ts,tsx,js,jsx}",
-  "generates": "../lib/sanity/src/types.ts"
-}

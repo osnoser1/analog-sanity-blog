@@ -1,0 +1,4 @@
+{
+  "path": "../../{apps/studio,packages/sanity}/src/**/*.{ts,tsx,js,jsx}",
+  "generates": "../../packages/sanity/src/types.ts"
+}

@@ -1,0 +1,18 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@sanity/assist": "^3.0.6",
+    "@sanity/icons": "^3.4.0",
+    "@sanity/image-url": "^1.0.2",
+    "@sanity/preview-url-secret": "^1.6.20",
+    "@sanity/vision": "^3.57.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sanity-plugin-asset-source-unsplash": "^3.0.1",
+    "styled-components": "^6.1.13"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0"
+  }
+}

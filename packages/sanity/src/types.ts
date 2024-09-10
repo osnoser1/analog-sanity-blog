@@ -421,7 +421,7 @@ export type AllSanitySchemaTypes =
   | SanityAssistInstruction
   | SanityAssistSchemaTypeField;
 export declare const internalGroqTypeReferenceTo: unique symbol;
-// Source: ../lib/sanity/src/queries.ts
+// Source: ../../packages/sanity/src/queries.ts
 // Variable: settingsQuery
 // Query: *[_type == "settings"][0]
 export type SettingsQueryResult = {

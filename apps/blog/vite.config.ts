@@ -8,10 +8,10 @@ import { typescriptPaths } from 'rollup-plugin-typescript-paths';
 export default defineConfig(() => {
   return {
     root: __dirname,
-    cacheDir: `../node_modules/.vite`,
+    cacheDir: `../../node_modules/.vite`,
 
     build: {
-      outDir: '../dist/blog/client',
+      outDir: '../../dist/blog/client',
       reportCompressedSize: true,
       target: ['es2020'],
     },

@@ -3,7 +3,7 @@
  */
 
 import { definePlugin, type DocumentDefinition } from 'sanity';
-import { type StructureResolver } from '../../../lib/sanity/structure';
+import { StructureResolver } from 'sanity/structure';
 
 export const singletonPlugin = definePlugin((types: string[]) => {
   return {

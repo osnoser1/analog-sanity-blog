@@ -1,6 +1,6 @@
 {
   "name": "blog",
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "targets": {
     "build": {
@@ -22,10 +22,10 @@
         "{workspaceRoot}/dist/blog/analog"
       ],
       "options": {
-        "main": "blog/src/main.ts",
-        "configFile": "blog/vite.config.ts",
+        "main": "apps/blog/src/main.ts",
+        "configFile": "apps/blog/vite.config.ts",
         "outputPath": "dist/blog/client",
-        "tsConfig": "blog/tsconfig.app.json"
+        "tsConfig": "apps/blog/tsconfig.app.json"
       }
     },
     "serve": {
@@ -47,5 +47,5 @@
     }
   },
   "tags": [],
-  "sourceRoot": "./blog/src"
+  "sourceRoot": "./apps/blog/src"
 }
