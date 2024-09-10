@@ -1,5 +1,5 @@
 {
-  "name": "@limitless-angular/sanity",
+  "name": "@limitless-angular/sanity-cpy",
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/common": "^18.0.0",
