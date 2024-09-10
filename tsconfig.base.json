@@ -16,22 +16,22 @@
     "baseUrl": ".",
     "paths": {
       "@limitless-angular/sanity/channels": [
-        "lib/sanity/channels/src/index.ts"
+        "lib/limitless-angular-sanity/channels/src/index.ts"
       ],
       "@limitless-angular/sanity/preview-kit": [
-        "lib/sanity/preview-kit/src/index.ts"
+        "lib/limitless-angular-sanity/preview-kit/src/index.ts"
       ],
       "@limitless-angular/sanity/preview-kit-compat": [
-        "lib/sanity/preview-kit-compat/src/index.ts"
+        "lib/limitless-angular-sanity/preview-kit-compat/src/index.ts"
       ],
       "@limitless-angular/sanity/visual-editing": [
-        "lib/sanity/visual-editing/src/index.ts"
+        "lib/limitless-angular-sanity/visual-editing/src/index.ts"
       ],
       "@limitless-angular/sanity/visual-editing-helpers": [
-        "lib/sanity/visual-editing-helpers/src/index.ts"
+        "lib/limitless-angular-sanity/visual-editing-helpers/src/index.ts"
       ],
       "@limitless-angular/sanity/visual-editing-helpers/csm": [
-        "lib/sanity/visual-editing-helpers/src/csm/index.ts"
+        "lib/limitless-angular-sanity/visual-editing-helpers/src/csm/index.ts"
       ]
     }
   },

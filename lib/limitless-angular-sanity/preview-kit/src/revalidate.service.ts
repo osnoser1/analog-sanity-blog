@@ -87,7 +87,7 @@ export class RevalidateService {
         filter(
           (interval) => !!interval && this.revalidateState$.value === 'hit',
         ),
-        switchMap((interval) => timer(interval, interval)),
+        switchMap((interval) => timer(0, interval)),
         takeUntilDestroyed(),
       )
       .subscribe(() => this.revalidateState$.next('stale'));
