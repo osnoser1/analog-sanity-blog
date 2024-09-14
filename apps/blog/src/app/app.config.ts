@@ -11,14 +11,9 @@ import {
 } from '@angular/router';
 
 import { provideFileRouter } from '@analogjs/router';
-import { provideSanityLoader } from '@limitless-angular/sanity/image-loader';
-import { type InitializedClientConfig } from '@sanity/client';
-import {
-  provideSanity,
-  withLivePreview,
-} from '@limitless-angular/sanity/preview-kit';
+import { provideSanity, withLivePreview } from '@limitless-angular/sanity';
 
-import { client, getClient } from '../sanity/lib/client';
+import { getClient } from '../sanity/lib/client';
 import { updateMetaTagsOnRouteChange } from './utils/meta-tags';
 
 export const appConfig: ApplicationConfig = {
@@ -31,7 +26,6 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(withFetch()),
     provideSanity(getClient, withLivePreview()),
-    provideSanityLoader(client.config() as Required<InitializedClientConfig>),
     {
       provide: ENVIRONMENT_INITIALIZER,
       multi: true,

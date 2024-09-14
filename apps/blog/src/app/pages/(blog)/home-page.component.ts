@@ -4,7 +4,7 @@ import {
   computed,
   input,
 } from '@angular/core';
-import { load } from './(home).server';
+import { type LoadResult } from './(home).server';
 import { FooterComponent } from './components/footer.component';
 import { OnboardingComponent } from './components/onboarding.component';
 import { MoreStoriesComponent } from './components/more-stories.component';
@@ -144,7 +144,7 @@ class HeroPostComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePageComponent {
-  data = input.required<Awaited<ReturnType<typeof load>>>();
+  data = input.required<LoadResult>();
 
   settings = computed(() => this.data().settings);
   posts = computed(() => this.data().posts.slice(1));

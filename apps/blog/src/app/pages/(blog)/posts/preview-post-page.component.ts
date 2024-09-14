@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 
-import { type load } from './[slug].server';
+import { type LoadResult } from './[slug].server';
 import { PostPageComponent } from './post-page.component';
 import {
   moreStoriesQuery,
@@ -18,7 +18,7 @@ import { createLiveData } from '../../../utils/create-live-data';
 export class PreviewPostPageComponent {
   slug = input.required<string>();
 
-  data = input.required<Awaited<ReturnType<typeof load>>>();
+  data = input.required<LoadResult>();
 
   liveData = createLiveData(this.data, () => ({
     post: { query: postBySlugQuery, params: { slug: this.slug() } },

@@ -5,7 +5,7 @@ import {
   input,
 } from '@angular/core';
 
-import { SanityImage } from '@limitless-angular/sanity';
+import { SanityImage } from '@limitless-angular/sanity/image-loader';
 import type { Author } from '@analog-sanity-blog/sanity';
 
 @Component({

@@ -19,7 +19,7 @@ import {
   PortableTextComponent as SanityPortableTextComponent,
   PortableTextComponents,
   PortableTextMarkComponent,
-} from '@limitless-angular/sanity';
+} from '@limitless-angular/sanity/portabletext';
 import { TypedObject } from '@portabletext/types';
 
 @Component({

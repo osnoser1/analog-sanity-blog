@@ -2,7 +2,7 @@ import { Component, input } from '@angular/core';
 
 import { demo } from '@analog-sanity-blog/sanity';
 
-import { type load } from './[slug].server';
+import { type LoadResult } from './[slug].server';
 import { RouterLink } from '@angular/router';
 import { CoverImageComponent } from '../components/cover-image';
 import { FooterComponent } from '../components/footer.component';
@@ -83,7 +83,7 @@ import { PortableTextComponent } from '../components/portable-text.component';
 export class PostPageComponent {
   slug = input.required<string>();
 
-  data = input.required<Awaited<ReturnType<typeof load>>>();
+  data = input.required<LoadResult>();
 
   protected readonly demo = demo;
 }

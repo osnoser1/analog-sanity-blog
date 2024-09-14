@@ -10,7 +10,10 @@
     "typegen": "npx -w studio sanity schema extract && npx -w studio sanity typegen generate"
   },
   "private": true,
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "dependencies": {
     "date-fns": "^3.6.0",
     "groq": "^3.53.0",

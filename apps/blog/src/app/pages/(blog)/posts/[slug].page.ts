@@ -12,7 +12,7 @@ import { PreviewPostPageComponent } from './preview-post-page.component';
 import { PostPageComponent } from './post-page.component';
 import { type MetaTag, RouteMeta } from '@analogjs/router';
 import { ROUTE_META_TAGS_KEY, ROUTE_TITLE_KEY } from '../../../utils/meta-tags';
-import { toPlainText } from '@limitless-angular/sanity';
+import { toPlainText } from '@limitless-angular/sanity/portabletext';
 import { resolveOpenGraphImage } from '../../../utils/resolve-open-graph-image';
 import { generateMetaTags } from '../../../utils/generate-metatags';
 import { demo } from '@analog-sanity-blog/sanity';

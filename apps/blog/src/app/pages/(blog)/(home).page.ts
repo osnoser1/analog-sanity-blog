@@ -9,7 +9,7 @@ import { type ResolveFn } from '@angular/router';
 import { type MetaTag, type RouteMeta } from '@analogjs/router';
 
 import type { load, LoadResult } from './(home).server';
-import { toPlainText } from '@limitless-angular/sanity';
+import { toPlainText } from '@limitless-angular/sanity/portabletext';
 import { ROUTE_META_TAGS_KEY, ROUTE_TITLE_KEY } from '../../utils/meta-tags';
 import { resolveOpenGraphImage } from '../../utils/resolve-open-graph-image';
 import { generateMetaTags } from '../../utils/generate-metatags';

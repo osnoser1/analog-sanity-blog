@@ -6,12 +6,8 @@ import {
   booleanAttribute,
 } from '@angular/core';
 
-import {
-  provideSanityLoader,
-  SanityImage,
-} from '@limitless-angular/sanity/image-loader';
+import { SanityImage } from '@limitless-angular/sanity/image-loader';
 
-import { dataset, projectId } from '../../../../sanity/lib/api';
 import { JsonPipe } from '@angular/common';
 
 @Component({
@@ -19,7 +15,6 @@ import { JsonPipe } from '@angular/common';
   standalone: true,
   imports: [SanityImage, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideSanityLoader({ projectId, dataset })],
   template: `
     <div
       class="shadow-md transition-shadow duration-200 group-hover:shadow-lg sm:mx-0"
