@@ -15,6 +15,9 @@ export default defineConfig(() => {
       reportCompressedSize: true,
       target: ['es2022'],
     },
+    ssr: {
+      noExternal: ['@angular/*', '@limitless-angular/*', 'lru-cache'],
+    },
     plugins: [
       analog({
         nitro: {

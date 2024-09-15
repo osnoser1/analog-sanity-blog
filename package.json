@@ -18,7 +18,6 @@
     "date-fns": "^3.6.0",
     "groq": "^3.53.0",
     "marked-highlight": "^2.1.4",
-    "sanity": "^3.57.1",
     "tslib": "^2.4.0"
   },
   "devDependencies": {
