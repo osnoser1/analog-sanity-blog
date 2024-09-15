@@ -11,7 +11,7 @@ export default defineConfig(() => {
     cacheDir: `../../node_modules/.vite`,
 
     build: {
-      outDir: '../../dist/blog/client',
+      outDir: '../../dist/apps/blog/client',
       reportCompressedSize: true,
       target: ['es2022'],
     },

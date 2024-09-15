@@ -17,14 +17,14 @@
       },
       "outputs": [
         "{options.outputPath}",
-        "{workspaceRoot}/dist/blog/.nitro",
-        "{workspaceRoot}/dist/blog/ssr",
-        "{workspaceRoot}/dist/blog/analog"
+        "{workspaceRoot}/dist/apps/blog/.nitro",
+        "{workspaceRoot}/dist/apps/blog/ssr",
+        "{workspaceRoot}/dist/apps/blog/analog"
       ],
       "options": {
         "main": "apps/blog/src/main.ts",
         "configFile": "apps/blog/vite.config.ts",
-        "outputPath": "dist/blog/client",
+        "outputPath": "dist/apps/blog/client",
         "tsConfig": "apps/blog/tsconfig.app.json"
       }
     },
