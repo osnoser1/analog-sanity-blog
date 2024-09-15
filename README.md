@@ -33,14 +33,14 @@ The Studio connects to Sanity Content Lake, which gives you hosted content APIs 
 
 Before deploying, follow these steps:
 
-1. Create a `VERCEL_BYPASS_TOKEN` Environment Variable to store a revalidation secret:
+1. Create a `BYPASS_TOKEN` Environment Variable to store a revalidation secret:
    - Use the command `openssl rand -base64 32` or [Generate a Secret](https://generate-secret.vercel.app/32) to generate a random value.
 
 2. Click the deploy button below:
 
 [![Deploy with Vercel](https://vercel.com/button)](vercel-deploy)
 
-3. In the Vercel UI, add the `VERCEL_BYPASS_TOKEN` secret you generated earlier.
+3. In the Vercel UI, add the `BYPASS_TOKEN` secret you generated earlier.
 
 ## How to use
 
@@ -291,7 +291,7 @@ npx vercel link
 
 This project is licensed under the MIT License. See our [MIT](LICENSE) file for details.
 
-[vercel-deploy]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fosnoser1%2Fanalog-sanity-blog&project-name=analog-sanity-blog&repository-name=analog-sanity-blog&demo-title=Analog%20Sanity%20Blog&demo-description=A%20statically%20generated%20blog%20example%20using%20Analog%20and%20Sanity&demo-url=https%3A%2F%2Fanalog-sanity-blog.vercel.app&demo-image=https%3A%2F%2Fcdn.sanity.io%2Fimages%2Fh0s9bb5k%2Fproduction%2F6d21d90950b4368d781ad4a42cebc65fef5569f4-3312x1744.png&integration-ids=oac_hb2LITYajhRQ0i4QznmKH7gx
+[vercel-deploy]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fosnoser1%2Fanalog-sanity-blog&env=BYPASS_TOKEN&envDescription=Revalidation%20secret%20to%20trigger%20%22On-Demand%20Incremental%20Static%20Regeneration%20(ISR)%22&envLink=https%3A%2F%2Fgithub.com%2Fosnoser1%2Fanalog-sanity-blog%2F%3Ftab%3Dreadme-ov-file%23deploy-your-own&project-name=analog-sanity-blog&repository-name=analog-sanity-blog&demo-title=Analog%20Sanity%20Blog%20with%20Limitless%20Angular&demo-description=A%20statically%20generated%20blog%20example%20using%20Analog%2C%20Sanity%20and%20Limitless%20Angular&demo-url=https%3A%2F%2Fanalog-sanity-blog.vercel.app&demo-image=https%3A%2F%2Fcdn.sanity.io%2Fimages%2Fh0s9bb5k%2Fproduction%2F6d21d90950b4368d781ad4a42cebc65fef5569f4-3312x1744.png&integration-ids=oac_hb2LITYajhRQ0i4QznmKH7gx
 [integration]: https://www.sanity.io/docs/vercel-integration
 [`.env.local.example`]: .env.local.example
 [unsplash]: https://unsplash.com

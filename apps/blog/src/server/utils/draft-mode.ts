@@ -3,12 +3,10 @@ import { H3Event, deleteCookie, getCookie, setCookie } from 'h3';
 const PRERENDER_BYPASS_COOKIE_NAME = '__prerender_bypass';
 const COOKIE_MAX_AGE = 60 * 60; // 1 hour
 
-const BYPASS_TOKEN = import.meta.env.VERCEL_BYPASS_TOKEN;
+const BYPASS_TOKEN = import.meta.env.BYPASS_TOKEN;
 
 if (!BYPASS_TOKEN) {
-  console.warn(
-    'VERCEL_BYPASS_TOKEN is not set. Draft Mode will not work correctly.',
-  );
+  console.warn('BYPASS_TOKEN is not set. Draft Mode will not work correctly.');
 }
 
 export function setDraftMode(event: H3Event, enable = true): void {

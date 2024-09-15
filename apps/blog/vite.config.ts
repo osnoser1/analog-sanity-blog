@@ -25,7 +25,7 @@ export default defineConfig(() => {
             '/posts/**': { isr: 60 },
           },
           vercel: {
-            config: { bypassToken: process.env['VERCEL_BYPASS_TOKEN'] },
+            config: { bypassToken: process.env['BYPASS_TOKEN'] },
           },
           rollupConfig: {
             plugins: [
