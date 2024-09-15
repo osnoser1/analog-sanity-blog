@@ -13,12 +13,7 @@ export default defineConfig(() => {
     build: {
       outDir: '../../dist/blog/client',
       reportCompressedSize: true,
-      target: ['es2020'],
-    },
-    server: {
-      fs: {
-        allow: ['.'],
-      },
+      target: ['es2022'],
     },
     plugins: [
       analog({
