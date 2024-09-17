@@ -74,10 +74,13 @@ export class OnboardingComponent {
   target = computed(() => (this.isTopWindow() ? undefined : '_blank'));
 
   constructor() {
-    effect(() => {
-      if (typeof window !== 'undefined') {
-        this.isTopWindow.set(window.top === window);
-      }
-    });
+    effect(
+      () => {
+        if (typeof window !== 'undefined') {
+          this.isTopWindow.set(window.top === window);
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 }
