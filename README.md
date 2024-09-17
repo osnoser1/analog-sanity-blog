@@ -178,7 +178,7 @@ Your blog should be up and running on [http://localhost:4200](http://localhost:4
 
 ## Step 3. Populate content
 
-Open your Sanity Studio that should be running on [http://localhost:3000/studio](http://localhost:3000/studio).
+Open your Sanity Studio that should be running on [http://localhost:3333](http://localhost:3333).
 
 By default you're taken to the [Presentation tool][presentation], which has a preview of the blog on the left hand side, and a list of documents on the right hand side.
 
