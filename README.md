@@ -127,14 +127,12 @@ Looks like you already have a Sanity-account. Sweet!
 ✔ Fetching existing projects
 ? Select project to use Templates [r0z1eifg]
 ? Select dataset to use blog-vercel
-? Would you like to add configuration files for a Sanity project in this Analog folder? No
+? Select dataset to use production
 
 Detected framework Vite, using prefix 'VITE_'
 Found existing VITE_SANITY_PROJECT_ID, replacing value.
 Found existing VITE_SANITY_DATASET, replacing value.
 ```
-
-It's important that when you're asked `Would you like to add configuration files for a Sanity project in this Analog folder?` that you answer `No` as this example is alredy setup with the required configuration files.
 
 #### Creating a read token
 
@@ -165,15 +163,15 @@ SANITY_API_READ_TOKEN="sk..."
 ## Step 2. Run Analog locally in development mode
 
 ```bash
-npm install && npm run dev
+npm install && npm run dev:all
 ```
 
 ```bash
-yarn install && yarn dev
+yarn install && yarn dev:all
 ```
 
 ```bash
-pnpm install && pnpm dev
+pnpm -r --link-workspace-packages install && pnpm dev:all
 ```
 
 Your blog should be up and running on [http://localhost:4200](http://localhost:4200)! If it doesn't work, post on [GitHub discussions](https://github.com/limitless-angular/limitless-angular/discussions).

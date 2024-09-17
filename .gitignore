@@ -42,9 +42,6 @@ Thumbs.db
 .nx/workspace-data
 
 .angular
-
-.vercel/
-
-.env.*
-
-.sanity/
+.sanity
+.vercel
+.env*.local

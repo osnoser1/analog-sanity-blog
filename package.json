@@ -7,7 +7,9 @@
     "dev:all": "nx run-many --target=serve --all --parallel",
     "prebuild": "npm run typegen",
     "build": "nx run-many --target=build --all --parallel",
-    "typegen": "npx -w studio sanity schema extract && npx -w studio sanity typegen generate"
+    "typegen": "node run-npx.mjs -w studio sanity schema extract && node run-npx.mjs -w studio sanity typegen generate",
+    "presetup": "echo 'about to setup env variables, follow the guide here: https://github.com/osnoser1/analog-sanity-blog/?tab=readme-ov-file#using-the-sanity-cli'",
+    "setup": "npx sanity@latest init --env .env.local"
   },
   "private": true,
   "workspaces": [
@@ -21,6 +23,7 @@
     "tslib": "^2.4.0"
   },
   "devDependencies": {
+    "@analogjs/content": "1.8.0",
     "@analogjs/platform": "1.8.0",
     "@analogjs/vite-plugin-angular": "1.8.0",
     "@angular-devkit/core": "^18.0.0",
@@ -34,6 +37,7 @@
     "@nx/devkit": "19.6.5",
     "@nx/eslint": "19.6.5",
     "@nx/eslint-plugin": "19.6.5",
+    "@nx/vite": "19.6.5",
     "@nx/workspace": "19.6.5",
     "@schematics/angular": "^18.0.0",
     "@tailwindcss/typography": "^0.5.14",
