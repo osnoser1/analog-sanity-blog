@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { type LoadResult } from './[slug].server';
 import { PostPageComponent } from './post-page.component';
@@ -14,6 +14,7 @@ import { createLiveData } from '../../../utils/create-live-data';
   standalone: true,
   template: `<post-page [slug]="slug()" [data]="liveData()" />`,
   imports: [PostPageComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PreviewPostPageComponent {
   slug = input.required<string>();

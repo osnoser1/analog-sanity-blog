@@ -18,7 +18,7 @@ import { demo } from '@analog-sanity-blog/sanity';
 @Component({
   selector: 'intro',
   standalone: true,
-  imports: [PortableTextComponent, PortableTextComponent],
+  imports: [PortableTextComponent],
   template: `
     <section
       class="mt-16 mb-16 flex flex-col items-center lg:mb-12 lg:flex-row lg:justify-between"
@@ -35,7 +35,7 @@ import { demo } from '@analog-sanity-blog/sanity';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-class IntroComponent {
+export class IntroComponent {
   title = input<string | null | undefined>();
   description = input<any>();
 
@@ -49,15 +49,7 @@ class IntroComponent {
 @Component({
   selector: 'hero-post',
   standalone: true,
-  imports: [
-    RouterLink,
-    CoverImageComponent,
-    DateComponent,
-    AvatarComponent,
-    AvatarComponent,
-    DateComponent,
-    CoverImageComponent,
-  ],
+  imports: [RouterLink, CoverImageComponent, DateComponent, AvatarComponent],
   template: `
     <article>
       <a [routerLink]="['/posts', slug()]" class="group mb-8 block md:mb-16">
@@ -89,7 +81,7 @@ class IntroComponent {
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-class HeroPostComponent {
+export class HeroPostComponent {
   title = input.required<string>();
   slug = input.required<string>();
   excerpt = input<string>();
@@ -105,7 +97,6 @@ class HeroPostComponent {
     IntroComponent,
     HeroPostComponent,
     OnboardingComponent,
-    MoreStoriesComponent,
     MoreStoriesComponent,
     FooterComponent,
   ],

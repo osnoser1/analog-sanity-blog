@@ -27,6 +27,7 @@ import { TypedObject } from '@portabletext/types';
   standalone: true,
   template: `<ng-container #children />`,
   host: { '[class]': '"mb-2 text-sm font-semibold"' },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Heading5Component extends PortableTextBlockComponent {}
 
@@ -35,6 +36,7 @@ export class Heading5Component extends PortableTextBlockComponent {}
   standalone: true,
   template: `<ng-container #children />`,
   host: { '[class]': '"mb-2 text-sm font-semibold"' },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Heading6Component extends PortableTextBlockComponent {}
 
@@ -46,6 +48,7 @@ export class Heading6Component extends PortableTextBlockComponent {}
     '[href]': 'value()?.href',
     '[rel]': '"noreferrer noopener"',
   },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LinkComponent extends PortableTextMarkComponent<{
   _type: 'link';

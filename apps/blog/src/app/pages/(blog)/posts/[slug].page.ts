@@ -1,13 +1,12 @@
-import { Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 
-import { load, type LoadResult } from './[slug].server';
-import { type ResolveFn, RouterLink } from '@angular/router';
-import { CoverImageComponent } from '../components/cover-image';
-import { FooterComponent } from '../components/footer.component';
-import { MoreStoriesComponent } from '../components/more-stories.component';
-import { AvatarComponent } from '../components/avatar.component';
-import { DateComponent } from '../components/date.component';
-import { PortableTextComponent } from '../components/portable-text.component';
+import { type LoadResult } from './[slug].server';
+import { type ResolveFn } from '@angular/router';
 import { PreviewPostPageComponent } from './preview-post-page.component';
 import { PostPageComponent } from './post-page.component';
 import { type MetaTag, RouteMeta } from '@analogjs/router';
@@ -48,22 +47,13 @@ export const routeMeta: RouteMeta = {
       <post-page [slug]="slug()" [data]="load()" />
     }
   `,
-  imports: [
-    RouterLink,
-    PortableTextComponent,
-    CoverImageComponent,
-    FooterComponent,
-    MoreStoriesComponent,
-    AvatarComponent,
-    DateComponent,
-    PreviewPostPageComponent,
-    PostPageComponent,
-  ],
+  imports: [PreviewPostPageComponent, PostPageComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class PostPage {
   slug = input.required<string>();
 
-  load = input.required<Awaited<ReturnType<typeof load>>>();
+  load = input.required<LoadResult>();
 
   draftMode = computed(() => this.load().draftMode);
 }

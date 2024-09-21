@@ -14,8 +14,14 @@ export const urlForImage = (source: any) => {
 };
 
 export function resolveOpenGraphImage(image: any, width = 1200, height = 627) {
-  if (!image) return;
+  if (!image) {
+    return undefined;
+  }
+
   const url = urlForImage(image)?.width(1200).height(627).fit('crop').url();
-  if (!url) return;
+  if (!url) {
+    return undefined;
+  }
+
   return { url, alt: image?.alt as string, width, height };
 }

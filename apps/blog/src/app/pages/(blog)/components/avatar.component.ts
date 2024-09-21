@@ -20,8 +20,8 @@ import type { Author } from '@analog-sanity-blog/sanity';
             class="h-full rounded-full object-cover"
             height="48"
             width="48"
-            [sanityImage]="this.picture()"
-            [alt]="picture()?.alt ?? ''"
+            [sanityImage]="this.picture()!"
+            [alt]="picture()!.alt ?? ''"
           />
         </div>
         <div class="text-pretty text-xl font-bold">{{ name() }}</div>

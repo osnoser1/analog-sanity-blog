@@ -6,7 +6,7 @@ import { PortableTextComponent } from './portable-text.component';
 @Component({
   selector: 'footer[app-footer]',
   standalone: true,
-  imports: [PortableTextComponent, PortableTextComponent],
+  imports: [PortableTextComponent],
   template: `<div class="container mx-auto px-5">
     @if (footer()?.length > 0) {
       <portable-text [value]="$any(footer())" />

@@ -8,12 +8,10 @@ import {
 
 import { SanityImage } from '@limitless-angular/sanity/image-loader';
 
-import { JsonPipe } from '@angular/common';
-
 @Component({
   selector: 'cover-image',
   standalone: true,
-  imports: [SanityImage, JsonPipe],
+  imports: [SanityImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
@@ -25,8 +23,8 @@ import { JsonPipe } from '@angular/common';
           width="2000"
           height="1000"
           sizes="100vw"
-          [alt]="image().alt ?? ''"
-          [sanityImage]="this.image()"
+          [alt]="image()!.alt ?? ''"
+          [sanityImage]="this.image()!"
           [priority]="priority()"
         />
       } @else {
