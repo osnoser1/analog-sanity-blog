@@ -23,6 +23,7 @@ import {
 import { TypedObject } from '@portabletext/types';
 
 @Component({
+  // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'h5',
   standalone: true,
   template: `<ng-container #children />`,
@@ -32,6 +33,7 @@ import { TypedObject } from '@portabletext/types';
 export class Heading5Component extends PortableTextBlockComponent {}
 
 @Component({
+  // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'h6',
   standalone: true,
   template: `<ng-container #children />`,
@@ -41,6 +43,7 @@ export class Heading5Component extends PortableTextBlockComponent {}
 export class Heading6Component extends PortableTextBlockComponent {}
 
 @Component({
+  // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'a',
   standalone: true,
   template: `<ng-container #children />`,
@@ -56,15 +59,18 @@ export class LinkComponent extends PortableTextMarkComponent<{
 }> {}
 
 @Component({
+  // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'portable-text',
   standalone: true,
   imports: [SanityPortableTextComponent],
-  template: `<div
-    portable-text
-    [class]="containerClasses()"
-    [value]="value()"
-    [components]="components"
-  ></div>`,
+  template: `@if (value(); as value) {
+    <div
+      portable-text
+      [class]="containerClasses()"
+      [value]="value"
+      [components]="components"
+    ></div>
+  }`,
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

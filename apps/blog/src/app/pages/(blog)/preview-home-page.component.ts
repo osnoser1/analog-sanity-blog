@@ -6,10 +6,10 @@ import { moreStoriesQuery, settingsQuery } from '@analog-sanity-blog/sanity';
 import { createLiveData } from '../../utils/create-live-data';
 
 @Component({
-  selector: 'preview-home-page',
+  selector: 'blog-preview-home-page',
   standalone: true,
   imports: [HomePageComponent],
-  template: `<home-page [data]="liveData()" />`,
+  template: `<blog-home-page [data]="liveData()" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PreviewHomePageComponent {

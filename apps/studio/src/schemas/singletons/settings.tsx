@@ -2,6 +2,7 @@ import { CogIcon } from '@sanity/icons';
 import { defineArrayMember, defineField, defineType } from 'sanity';
 
 import { demo } from '@analog-sanity-blog/sanity';
+import type { SanityImageObject } from '@sanity/image-url/lib/types/types';
 
 export default defineType({
   name: 'settings',
@@ -97,7 +98,11 @@ export default defineType({
           type: 'string',
           validation: (rule) => {
             return rule.custom((alt, context) => {
-              if ((context.document?.['ogImage'] as any)?.asset?._ref && !alt) {
+              if (
+                (context.document?.['ogImage'] as SanityImageObject | undefined)
+                  ?.asset?._ref &&
+                !alt
+              ) {
                 return 'Required';
               }
               return true;

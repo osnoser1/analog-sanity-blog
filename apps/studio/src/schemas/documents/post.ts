@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { defineField, defineType } from 'sanity';
 
 import authorType from './author';
+import type { SanityImageObject } from '@sanity/image-url/lib/types/types';
 
 /**
  * This file is the schema definition for a post.
@@ -70,7 +71,11 @@ export default defineType({
           validation: (rule) => {
             return rule.custom((alt, context) => {
               if (
-                (context.document?.['coverImage'] as any)?.asset?._ref &&
+                (
+                  context.document?.['coverImage'] as
+                    | SanityImageObject
+                    | undefined
+                )?.asset?._ref &&
                 !alt
               ) {
                 return 'Required';

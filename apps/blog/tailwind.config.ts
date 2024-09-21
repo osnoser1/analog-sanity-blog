@@ -1,9 +1,9 @@
-const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
-const { join } = require('node:path');
-const { fontFamily } = require('tailwindcss/defaultTheme');
+import type { Config } from 'tailwindcss';
+import { createGlobPatternsForDependencies } from '@nx/angular/tailwind';
+import { join } from 'node:path';
+import { fontFamily } from 'tailwindcss/defaultTheme';
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+const config: Config = {
   content: [
     './index.html',
     join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
@@ -21,3 +21,5 @@ module.exports = {
   },
   plugins: [require('@tailwindcss/typography')],
 };
+
+export default config;

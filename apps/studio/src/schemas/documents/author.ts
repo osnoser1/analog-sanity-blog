@@ -25,6 +25,7 @@ export default defineType({
           description: 'Important for SEO and accessiblity.',
           validation: (rule) => {
             return rule.custom((alt, context) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               if ((context.document?.['picture'] as any)?.asset?._ref && !alt) {
                 return 'Required';
               }

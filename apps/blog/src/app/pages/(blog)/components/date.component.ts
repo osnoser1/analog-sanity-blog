@@ -8,7 +8,7 @@ import {
 import { format } from 'date-fns';
 
 @Component({
-  selector: 'date-component',
+  selector: 'blog-date-component',
   standalone: true,
   imports: [],
   template: `

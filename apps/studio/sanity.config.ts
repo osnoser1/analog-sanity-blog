@@ -66,6 +66,7 @@ export default defineConfig({
               locations: [
                 {
                   title: doc?.title || 'Untitled',
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   href: resolveHref('post', doc?.slug)!,
                 },
                 homeLocation,
