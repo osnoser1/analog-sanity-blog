@@ -19,6 +19,9 @@
         "command": "sanity dev",
         "cwd": "apps/studio"
       }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
     }
   }
 }
