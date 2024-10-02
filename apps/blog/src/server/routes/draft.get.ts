@@ -1,4 +1,10 @@
-import { createError, defineEventHandler, sendRedirect } from 'h3';
+import {
+  createError,
+  defineEventHandler,
+  sendRedirect,
+  setResponseHeader,
+  setResponseStatus,
+} from 'h3';
 import { validatePreviewUrl } from '@sanity/preview-url-secret';
 import { client } from '../../sanity/lib/client';
 import { readToken } from '../../sanity/lib/token';
@@ -22,5 +28,6 @@ export default defineEventHandler(async (event) => {
 
   // Enable Draft Mode by setting the cookies
   setDraftMode(event);
-  return sendRedirect(event, redirectTo, 307);
+  setResponseHeader(event, 'Location', redirectTo);
+  setResponseStatus(event, 307);
 });
