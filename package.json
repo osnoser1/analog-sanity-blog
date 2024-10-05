@@ -24,9 +24,9 @@
     "tslib": "^2.4.0"
   },
   "devDependencies": {
-    "@analogjs/content": "1.8.0",
-    "@analogjs/platform": "1.8.0",
-    "@analogjs/vite-plugin-angular": "1.8.0",
+    "@analogjs/content": "1.9.0-beta.4",
+    "@analogjs/platform": "1.9.0-beta.4",
+    "@analogjs/vite-plugin-angular": "1.9.0-beta.4",
     "@angular-devkit/schematics": "^18.0.0",
     "@angular/build": "^18.0.0",
     "@angular/compiler-cli": "^18.0.0",
