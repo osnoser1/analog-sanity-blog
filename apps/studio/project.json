@@ -9,7 +9,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sanity build",
+        "command": "NODE_ENV=production sanity build",
         "cwd": "apps/studio"
       }
     },
@@ -22,6 +22,12 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo \"y\" | node run-npx.mjs -w studio sanity deploy ../../dist/apps/studio --no-build"
+      }
     }
   }
 }

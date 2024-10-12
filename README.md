@@ -260,6 +260,8 @@ We're all set to do some content creation!
 
 ## Step 4. Deploy to production
 
+### 4.1 Deploy the Analog Blog
+
 > [!NOTE]  
 > If you already [deployed with Vercel earlier](#deploy-your-own) you can skip this step.
 
@@ -277,6 +279,63 @@ npx vercel link
 > [!TIP]
 > In production you can exit Draft Mode by clicking on _"Back to published"_ at the top. On [Preview deployments](https://vercel.com/docs/deployments/preview-deployments) you can [toggle Draft Mode in the Vercel Toolbar](https://vercel.com/docs/workflow-collaboration/draft-mode#enabling-draft-mode-in-the-vercel-toolbar).
 
+
+### 4.2 Deploy the Sanity Studio
+
+Before deploying the Sanity Studio, we need to set up the correct environment variables:
+
+1. Create a `.env.production.local` file in the root of your project if it doesn't exist already.
+
+2. Add the `VITE_SANITY_PREVIEW_URL` variable to this file, pointing to your deployed Analog blog URL:
+
+````bash
+VITE_SANITY_PREVIEW_URL=https://your-analog-blog-url.vercel.app
+````
+
+> [!NOTE]
+> The `VITE_SANITY_PREVIEW_URL` is used by the Sanity Studio to enable real-time preview of your content on your deployed Analog blog.
+
+3. Update your `.env.local` file with the Studio URL as defined in `sanity.cli.ts`:
+
+````bash
+VITE_SANITY_STUDIO_URL=https://analog-sanity-blog-your-project-id.sanity.studio
+````
+
+Replace `your-project-id` with your actual Sanity project ID.
+
+> [!NOTE]
+> The `VITE_SANITY_STUDIO_URL` is used by your Analog blog to know where to find the Sanity Studio, enabling features like "Edit" buttons that link directly to the Studio.
+
+Now, let's proceed with the deployment:
+
+4. Build the Sanity Studio:
+
+```bash
+nx build studio
+```
+
+5. Deploy the built Studio to Sanity's servers:
+
+````bash
+nx deploy studio
+````
+
+6. Once deployed, confirm that the Studio URL matches the one you've set in your `.env.local` file.
+
+
+7. Update your Vercel deployment with the new Studio URL environment variable:
+
+````bash
+npx vercel env add VITE_SANITY_STUDIO_URL
+````
+
+8. Redeploy your Analog blog to Vercel to use the new environment variable:
+
+````bash
+npx vercel --prod
+````
+
+Now both your Analog blog and Sanity Studio are deployed and correctly connected in production. The Studio will be able to preview your Analog blog, and your blog will know where to find the Studio.
 
 ## Next steps
 

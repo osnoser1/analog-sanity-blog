@@ -22,7 +22,7 @@ import settings from './src/schemas/singletons/settings';
 import { resolveHref } from './src/lib/utils';
 
 const SANITY_STUDIO_PREVIEW_URL =
-  process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:4200';
+  import.meta.env?.['VITE_SANITY_PREVIEW_URL'] ?? 'http://localhost:4200';
 
 const homeLocation = {
   title: 'Home',

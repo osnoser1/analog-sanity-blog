@@ -8,6 +8,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables from .env file
 loadEnvFile(join(__dirname, '.env.local'));
+loadEnvFile(join(__dirname, '.env.development.local'));
+loadEnvFile(join(__dirname, '.env.production.local'));
 
 // Get the npx command and arguments from command line
 const args = process.argv.slice(2);

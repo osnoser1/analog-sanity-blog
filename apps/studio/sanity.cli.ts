@@ -18,11 +18,13 @@ export default defineCliConfig({
     dataset: process.env.VITE_SANITY_DATASET,
     projectId: process.env.VITE_SANITY_PROJECT_ID,
   },
+  studioHost: `analog-sanity-blog-${process.env.VITE_SANITY_PROJECT_ID}`,
   vite: {
     root: __dirname,
     cacheDir: '../../node_modules/.vite/studio',
     build: {
-      outDir: '../../dist/studio',
+      emptyOutDir: true,
+      outDir: '../../dist/apps/studio',
     },
     plugins: [nxViteTsPaths()],
     envPrefix: 'VITE_',
