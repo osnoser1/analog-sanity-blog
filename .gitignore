@@ -45,3 +45,5 @@ Thumbs.db
 .sanity
 .vercel
 .env*.local
+
+vite.config.*.timestamp*
