@@ -1,5 +1,6 @@
 import { loadEnvFile } from 'node:process';
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -7,9 +8,17 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables from .env file
-loadEnvFile(join(__dirname, '.env.local'));
-loadEnvFile(join(__dirname, '.env.development.local'));
-loadEnvFile(join(__dirname, '.env.production.local'));
+if (existsSync(join(__dirname, '.env.local'))) {
+  loadEnvFile(join(__dirname, '.env.local'));
+}
+
+if (existsSync(join(__dirname, '.env.development.local'))) {
+  loadEnvFile(join(__dirname, '.env.development.local'));
+}
+
+if (existsSync(join(__dirname, '.env.production.local')) && process.env.NODE_ENV === 'production') {
+  loadEnvFile(join(__dirname, '.env.production.local'));
+}
 
 // Get the npx command and arguments from command line
 const args = process.argv.slice(2);
