@@ -7,10 +7,10 @@
     "@angular/platform-browser": "^18.0.0",
     "@angular/platform-server": "^18.0.0",
     "@angular/router": "^18.0.0",
-    "@limitless-angular/sanity": "^18.2.0-beta.1",
+    "@limitless-angular/sanity": "^18.2.0",
     "@sanity/client": "^6.21.1",
     "@sanity/image-url": "^1.0.2",
-    "@sanity/preview-url-secret": "^1.6.20",
+    "@sanity/preview-url-secret": "^2.0.2",
     "rxjs": "~7.8.0",
     "sitemap": "^8.0.0",
     "zone.js": "~0.14.0"

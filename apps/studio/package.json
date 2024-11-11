@@ -5,7 +5,7 @@
     "@sanity/client": "^6.21.1",
     "@sanity/icons": "^3.4.0",
     "@sanity/image-url": "^1.0.2",
-    "@sanity/preview-url-secret": "^1.6.20",
+    "@sanity/preview-url-secret": "^2.0.2",
     "@sanity/vision": "^3.57.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
