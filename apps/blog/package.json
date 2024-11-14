@@ -8,7 +8,7 @@
     "@angular/platform-browser": "^18.0.0",
     "@angular/platform-server": "^18.0.0",
     "@angular/router": "^18.0.0",
-    "@limitless-angular/sanity": "^18.2.0",
+    "@limitless-angular/sanity": "^18.3.0",
     "@sanity/client": "^6.21.1",
     "@sanity/image-url": "^1.0.2",
     "@sanity/preview-url-secret": "^2.0.2",
