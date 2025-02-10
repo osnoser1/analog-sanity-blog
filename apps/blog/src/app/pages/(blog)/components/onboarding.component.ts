@@ -9,7 +9,6 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'blog-onboarding',
-  standalone: true,
   imports: [RouterLink],
   template: `
     <div class="grid grid-flow-row gap-6 py-60 text-center">
@@ -74,13 +73,10 @@ export class OnboardingComponent {
   target = computed(() => (this.isTopWindow() ? undefined : '_blank'));
 
   constructor() {
-    effect(
-      () => {
-        if (typeof window !== 'undefined') {
-          this.isTopWindow.set(window.top === window);
-        }
-      },
-      { allowSignalWrites: true },
-    );
+    effect(() => {
+      if (typeof window !== 'undefined') {
+        this.isTopWindow.set(window.top === window);
+      }
+    });
   }
 }

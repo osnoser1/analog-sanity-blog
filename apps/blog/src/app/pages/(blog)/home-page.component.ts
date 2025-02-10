@@ -17,7 +17,6 @@ import { demo } from '@analog-sanity-blog/sanity';
 
 @Component({
   selector: 'blog-intro',
-  standalone: true,
   imports: [PortableTextComponent],
   template: `
     <section
@@ -49,7 +48,6 @@ export class IntroComponent {
 
 @Component({
   selector: 'blog-hero-post',
-  standalone: true,
   imports: [RouterLink, CoverImageComponent, DateComponent, AvatarComponent],
   template: `
     <article>
@@ -95,7 +93,6 @@ export class HeroPostComponent {
 
 @Component({
   selector: 'blog-home-page',
-  standalone: true,
   imports: [
     IntroComponent,
     HeroPostComponent,
@@ -134,7 +131,6 @@ export class HeroPostComponent {
     </div>
     <footer blog-footer [footer]="settings()?.footer"></footer>
   `,
-  styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePageComponent {
