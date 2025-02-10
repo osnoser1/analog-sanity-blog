@@ -38,7 +38,7 @@ Before deploying, follow these steps:
 
 2. Click the deploy button below:
 
-[![Deploy with Vercel](https://vercel.com/button)](vercel-deploy)
+[![Deploy with Vercel](https://vercel.com/button)][vercel-deploy]
 
 3. In the Vercel UI, add the `BYPASS_TOKEN` secret you generated earlier.
 
