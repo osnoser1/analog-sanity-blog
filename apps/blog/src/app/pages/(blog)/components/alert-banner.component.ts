@@ -10,7 +10,6 @@ import { injectDisableDraftMode } from './actions';
 
 @Component({
   selector: 'blog-alert-banner',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (shouldShow()) {

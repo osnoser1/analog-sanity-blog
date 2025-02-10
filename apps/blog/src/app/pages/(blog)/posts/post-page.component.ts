@@ -13,7 +13,6 @@ import { PortableTextComponent } from '../components/portable-text.component';
 
 @Component({
   selector: 'blog-post-page',
-  standalone: true,
   template: `
     @let post = data().post;
     @let settings = data().settings;
